@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Status</title>
+    <link rel="stylesheet" href="./styles.css?v=6" />
+  </head>
+  <body>
+    <main class="container narrow">
+      <section class="card">
+        <h1>Booking Status</h1>
+        <p id="status-message">Sjekker bookingstatus ...</p>
+        <p class="vipps-note">Betaling: <strong>Vipps til 97908575</strong></p>
+        <div id="status-details"></div>
+        <a class="link-button" href="./index.html">Back to booking form</a>
+      </section>
+    </main>
+
+    <script>
+      (async () => {
+        const params = new URLSearchParams(window.location.search);
+        const reference = params.get('reference');
+        const messageEl = document.getElementById('status-message');
+        const detailsEl = document.getElementById('status-details');
+
+        if (!reference) {
+          messageEl.textContent = 'Missing booking reference in URL.';
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/bookings/complete?reference=${encodeURIComponent(reference)}`);
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Unable to verify payment status.');
+          }
+
+          if (data.paymentMode === 'manual' || data.status === 'awaiting_manual_payment') {
+            const vippsNumber = data.manualVippsNumber || '97908575';
+            messageEl.textContent = `Booking mottatt. Vipps NOK ${Number(data.amountNok).toFixed(2)} til ${vippsNumber} og merk betalingen med referanse ${data.reference}.`;
+            messageEl.classList.add('status-ok');
+          } else if (data.status === 'paid') {
+            messageEl.textContent = 'Payment confirmed. Your booking is registered.';
+            messageEl.classList.add('status-ok');
+          } else if (data.status === 'authorized') {
+            messageEl.textContent = 'Payment authorized. We will confirm capture shortly.';
+          } else if (data.status === 'payment_failed') {
+            messageEl.textContent = 'Payment was not completed. Please try again.';
+          } else {
+            messageEl.textContent = 'Payment is still pending. Refresh this page in a moment.';
+          }
+
+          detailsEl.innerHTML = `
+            <ul>
+              <li><strong>Reference:</strong> ${data.reference}</li>
+              <li><strong>Status:</strong> ${data.status}</li>
+              <li><strong>Payment mode:</strong> ${data.paymentMode || 'vipps'}</li>
+              <li><strong>Vipps state:</strong> ${data.vippsState || 'n/a'}</li>
+              <li><strong>Amount:</strong> NOK ${Number(data.amountNok).toFixed(2)}</li>
+            </ul>
+          `;
+        } catch (error) {
+          messageEl.textContent = error.message;
+        }
+      })();
+    </script>
+  </body>
+</html>

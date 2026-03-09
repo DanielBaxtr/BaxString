@@ -1,0 +1,22 @@
+[
+  {
+    "id": "d68fb9d1-1a3e-460a-9fa0-01b0f685c696",
+    "reference": "RS-MMG9KF9M-F72F88",
+    "customerName": "Daniel Baxter",
+    "email": "danielerlend.baxter@gmail.com",
+    "phone": "4797908575",
+    "racketModel": "",
+    "tensionKg": 24,
+    "hasOwnString": true,
+    "notes": "",
+    "amountOere": 17500,
+    "amountNok": 175,
+    "stringChargeNok": 0,
+    "paymentMode": "manual",
+    "manualVippsNumber": "97908575",
+    "status": "awaiting_manual_payment",
+    "vippsState": null,
+    "createdAt": "2026-03-07T11:52:29.771Z",
+    "updatedAt": "2026-03-07T11:52:29.794Z"
+  }
+]

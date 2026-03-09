@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stringer Booking</title>
+    <link rel="stylesheet" href="./styles.css?v=6" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card hero">
+        <h1>Tennis Racket Restringing</h1>
+        <p>Velg tension og string option, og betal manuelt etter booking.</p>
+      </section>
+
+      <section class="card">
+        <h2>Book Your Slot</h2>
+        <form id="booking-form">
+          <div class="grid">
+            <label>
+              Full name
+              <input name="customerName" type="text" required minlength="2" maxlength="80" />
+            </label>
+
+            <label>
+              Email
+              <input name="email" type="email" required />
+            </label>
+
+            <label>
+              Phone (Norway)
+              <input name="phone" type="tel" required placeholder="e.g. 91234567" />
+            </label>
+
+            <label>
+              Racket model (optional)
+              <input name="racketModel" type="text" maxlength="80" />
+            </label>
+          </div>
+
+          <label>
+            Tension: <span id="tension-display">24.0</span> kg
+            <input id="tension-input" name="tensionKg" type="range" min="16" max="32" step="0.5" value="24" />
+          </label>
+
+          <fieldset>
+            <legend>String option</legend>
+            <label class="inline-option">
+              <input type="radio" name="hasOwnString" value="yes" checked />
+              I bring my own string
+            </label>
+            <label class="inline-option">
+              <input type="radio" name="hasOwnString" value="no" />
+              Include string material
+            </label>
+          </fieldset>
+
+          <label>
+            Notes (optional)
+            <textarea name="notes" rows="4" maxlength="500" placeholder="Any preferred pattern or details"></textarea>
+          </label>
+
+          <div class="summary" id="price-summary"></div>
+          <p class="vipps-note">Betaling: <strong>Vipps til 97908575</strong></p>
+
+          <button id="submit-btn" type="submit">Send booking</button>
+          <p id="form-message" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="./app.js?v=2"></script>
+  </body>
+</html>

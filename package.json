@@ -1,0 +1,14 @@
+{
+  "name": "stringer-booking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tennis racket restringing booking with Vipps payment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
