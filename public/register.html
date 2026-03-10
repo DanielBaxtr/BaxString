@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registrer | Stringr</title>
+    <link rel="stylesheet" href="./auth.css?v=3" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-row">
+        <a href="./index.html#hjem" class="logo">Stringr</a>
+
+        <nav class="main-nav" aria-label="Hovedmeny">
+          <a href="./index.html#hjem">Hjem</a>
+          <a href="./index.html#om-oss">Om oss</a>
+          <a href="./index.html#finn-stringer">Finn stringer</a>
+          <a href="./index.html#kontakt">Kontakt</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="./login.html" class="login-link">Logg inn</a>
+          <a href="./add-listing.html" class="add-listing-btn">+ Stringere! Legg til oppføring</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="panel">
+        <h1>Registrer ny bruker</h1>
+        <p class="subtitle">Opprett en konto med navn, e-post og passord.</p>
+
+        <form id="register-form" class="auth-form" novalidate>
+          <label>
+            Fullt navn
+            <input id="register-name" type="text" placeholder="Fornavn Etternavn" autocomplete="name" required />
+          </label>
+
+          <label>
+            E-post
+            <input id="register-email" type="email" placeholder="navn@epost.no" autocomplete="email" required />
+          </label>
+
+          <label>
+            Passord
+            <input
+              id="register-password"
+              type="password"
+              placeholder="Minst 8 tegn"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+          </label>
+
+          <label>
+            Bekreft passord
+            <input
+              id="register-password-confirm"
+              type="password"
+              placeholder="Skriv passordet igjen"
+              autocomplete="new-password"
+              minlength="8"
+              required
+            />
+          </label>
+
+          <button type="submit" class="primary-btn">Opprett bruker</button>
+        </form>
+
+        <p id="auth-message" class="status-message" aria-live="polite"></p>
+        <p class="switch-link">
+          Har du allerede bruker?
+          <a id="to-login-link" href="./login.html" class="text-link">Logg inn</a>
+        </p>
+      </section>
+    </main>
+
+    <p class="footer-simple">© 2026 Stringr</p>
+    <script src="./auth.js?v=6"></script>
+  </body>
+</html>

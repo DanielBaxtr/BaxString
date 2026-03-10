@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking | Stringr</title>
+    <link rel="stylesheet" href="./styles.css?v=8" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card hero">
+        <h1>Book racket-strenging</h1>
+        <p>Velg tension og stringvalg. Betaling skjer manuelt etter innsending.</p>
+        <p id="search-context" class="search-context"></p>
+        <p id="stringer-context" class="stringer-context"></p>
+      </section>
+
+      <section class="card">
+        <h2>Bestillingsdetaljer</h2>
+        <form id="booking-form">
+          <div class="grid">
+            <label>
+              Fullt navn
+              <input name="customerName" type="text" required minlength="2" maxlength="80" />
+            </label>
+
+            <label>
+              E-post
+              <input name="email" type="email" required />
+            </label>
+
+            <label>
+              Telefon (Norge)
+              <input name="phone" type="tel" required placeholder="f.eks. 91234567" />
+            </label>
+
+            <label>
+              Racketmodell (valgfritt)
+              <input name="racketModel" type="text" maxlength="80" />
+            </label>
+          </div>
+
+          <label>
+            Tension: <span id="tension-display">24.0</span> kg
+            <input id="tension-input" name="tensionKg" type="range" min="16" max="32" step="0.5" value="24" />
+          </label>
+
+          <fieldset>
+            <legend>Stringvalg</legend>
+            <label class="inline-option">
+              <input type="radio" name="hasOwnString" value="yes" checked />
+              Jeg tar med egne strenger
+            </label>
+            <label class="inline-option">
+              <input type="radio" name="hasOwnString" value="no" />
+              Inkluder strenger i prisen
+            </label>
+          </fieldset>
+
+          <label>
+            Notater (valgfritt)
+            <textarea name="notes" rows="4" maxlength="500" placeholder="Ønsket mønster eller annen info"></textarea>
+          </label>
+
+          <div class="summary" id="price-summary"></div>
+          <p class="vipps-note">Betaling: <strong>Vipps til 97908575</strong></p>
+
+          <input id="selected-stringer" name="selectedStringer" type="hidden" />
+          <input id="selected-price" name="selectedPrice" type="hidden" />
+          <input id="selected-wait" name="selectedWait" type="hidden" />
+
+          <button id="submit-btn" type="submit">Send bestilling</button>
+          <p id="form-message" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="./app.js?v=6"></script>
+  </body>
+</html>

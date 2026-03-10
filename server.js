@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-const http = require('http');
+const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { URL } = require('url');
+const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
+const bcrypt = require('bcrypt');
+const sqlite3 = require('sqlite3').verbose();
 
 loadEnv();
 
@@ -15,6 +18,10 @@ const MANUAL_VIPPS_NUMBER = process.env.MANUAL_VIPPS_NUMBER || '97908575';
 const VIPPS_ENV = (process.env.VIPPS_ENV || 'test').toLowerCase();
 const VIPPS_AUTO_CAPTURE = (process.env.VIPPS_AUTO_CAPTURE || 'true').toLowerCase() === 'true';
 
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+const SESSION_MAX_AGE_MS = Number(process.env.SESSION_MAX_AGE_MS || 1000 * 60 * 60 * 24 * 7);
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 const TOKEN_ENDPOINT =
   VIPPS_ENV === 'production'
     ? 'https://api.vipps.no/accesstoken/get'
@@ -24,58 +31,218 @@ const EPAYMENT_BASE_URL =
 
 const DATA_DIR = path.join(__dirname, 'data');
 const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json');
+const STRINGERS_FILE = path.join(DATA_DIR, 'stringers.json');
+const AUTH_DB_FILE = path.join(DATA_DIR, 'auth.db');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
-ensureDataFile();
+ensureDataFiles();
+const authDb = openAuthDb();
 
-const server = http.createServer(async (req, res) => {
-  try {
-    const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+const app = express();
 
-    if (req.method === 'POST' && parsedUrl.pathname === '/api/bookings') {
-      const payload = await parseJsonBody(req);
-      const booking = await createBookingAndPayment(payload);
-      return sendJson(res, 201, booking);
+if (IS_PRODUCTION) {
+  app.set('trust proxy', 1);
+}
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false }));
+app.use(
+  session({
+    store: new SQLiteStore({
+      db: 'sessions.sqlite',
+      dir: DATA_DIR
+    }),
+    name: 'stringr.sid',
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: IS_PRODUCTION,
+      maxAge: SESSION_MAX_AGE_MS
+    }
+  })
+);
+
+app.post(
+  '/api/register',
+  asyncHandler(async (req, res) => {
+    const normalized = normalizeAndValidateRegistration(req.body || {});
+
+    const existing = await findUserByEmail(normalized.email);
+    if (existing) {
+      return res.status(409).json({ error: 'E-post er allerede registrert.' });
     }
 
-    if (req.method === 'GET' && parsedUrl.pathname === '/api/bookings/complete') {
-      const reference = parsedUrl.searchParams.get('reference');
-      if (!reference) {
-        return sendJson(res, 400, { error: 'Missing reference query parameter.' });
+    const passwordHash = await bcrypt.hash(normalized.password, 12);
+    const createdAt = new Date().toISOString();
+
+    const result = await dbRun(
+      authDb,
+      `INSERT INTO users (name, email, password_hash, created_at)
+       VALUES (?, ?, ?, ?)`,
+      [normalized.name, normalized.email, passwordHash, createdAt]
+    );
+
+    req.session.userId = result.lastID;
+
+    return res.status(201).json({
+      user: {
+        id: result.lastID,
+        name: normalized.name,
+        email: normalized.email,
+        createdAt
       }
+    });
+  })
+);
 
-      const result = await completeBooking(reference);
-      return sendJson(res, 200, result);
+app.post(
+  '/api/login',
+  asyncHandler(async (req, res) => {
+    const email = sanitizeEmail(req.body?.email);
+    const password = sanitizeLoginPassword(req.body?.password);
+
+    const userRow = await dbGet(authDb, 'SELECT * FROM users WHERE email = ? COLLATE NOCASE', [email]);
+    if (!userRow) {
+      return res.status(401).json({ error: 'Feil e-post eller passord.' });
     }
 
-    if (req.method === 'GET' && parsedUrl.pathname === '/api/bookings/status') {
-      const reference = parsedUrl.searchParams.get('reference');
-      if (!reference) {
-        return sendJson(res, 400, { error: 'Missing reference query parameter.' });
-      }
-
-      const booking = findBooking(reference);
-      if (!booking) {
-        return sendJson(res, 404, { error: 'Booking not found.' });
-      }
-
-      return sendJson(res, 200, booking);
+    const ok = await bcrypt.compare(password, userRow.password_hash);
+    if (!ok) {
+      return res.status(401).json({ error: 'Feil e-post eller passord.' });
     }
 
-    if (req.method === 'GET' && parsedUrl.pathname === '/api/health') {
-      return sendJson(res, 200, { ok: true, env: VIPPS_ENV, paymentMode: PAYMENT_MODE });
-    }
+    req.session.userId = userRow.id;
 
-    serveStaticFile(req, res, parsedUrl.pathname);
-  } catch (error) {
-    const statusCode = error.statusCode || 500;
-    sendJson(res, statusCode, { error: error.message || 'Unexpected server error.' });
+    return res.status(200).json({ user: mapUserRow(userRow) });
+  })
+);
+
+app.post('/api/logout', (req, res) => {
+  if (!req.session) {
+    return res.status(200).json({ ok: true });
   }
+
+  req.session.destroy((error) => {
+    if (error) {
+      return res.status(500).json({ error: 'Kunne ikke logge ut.' });
+    }
+
+    res.clearCookie('stringr.sid');
+    return res.status(200).json({ ok: true });
+  });
 });
 
-server.listen(PORT, () => {
+app.get(
+  '/api/me',
+  asyncHandler(async (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Ikke logget inn.' });
+    }
+
+    const userRow = await dbGet(authDb, 'SELECT * FROM users WHERE id = ?', [req.session.userId]);
+    if (!userRow) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: 'Ikke logget inn.' });
+    }
+
+    return res.status(200).json({ user: mapUserRow(userRow) });
+  })
+);
+
+app.post(
+  '/api/bookings',
+  asyncHandler(async (req, res) => {
+    const booking = await createBookingAndPayment(req.body || {});
+    return res.status(201).json(booking);
+  })
+);
+
+app.get(
+  '/api/bookings/complete',
+  asyncHandler(async (req, res) => {
+    const reference = req.query.reference;
+    if (!reference) {
+      return res.status(400).json({ error: 'Missing reference query parameter.' });
+    }
+
+    const result = await completeBooking(reference);
+    return res.status(200).json(result);
+  })
+);
+
+app.get('/api/bookings/status', (req, res) => {
+  const reference = req.query.reference;
+  if (!reference) {
+    return res.status(400).json({ error: 'Missing reference query parameter.' });
+  }
+
+  const booking = findBooking(reference);
+  if (!booking) {
+    return res.status(404).json({ error: 'Booking not found.' });
+  }
+
+  return res.status(200).json(booking);
+});
+
+app.get('/api/stringers', (req, res) => {
+  const stringers = readStringers().map(toPublicStringer);
+  return res.status(200).json(stringers);
+});
+
+app.post(
+  '/api/stringers',
+  asyncHandler(async (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Du må være logget inn.' });
+    }
+
+    const owner = await dbGet(authDb, 'SELECT * FROM users WHERE id = ?', [req.session.userId]);
+    if (!owner) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: 'Du må være logget inn.' });
+    }
+
+    const normalized = normalizeAndValidateStringer(req.body || {}, mapUserRow(owner));
+    const stringer = {
+      id: crypto.randomUUID(),
+      ...normalized,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    appendStringer(stringer);
+    return res.status(201).json(toPublicStringer(stringer));
+  })
+);
+
+app.get('/api/health', (req, res) => {
+  return res.status(200).json({ ok: true, env: VIPPS_ENV, paymentMode: PAYMENT_MODE });
+});
+
+app.use(express.static(PUBLIC_DIR));
+
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found.' });
+});
+
+app.use((error, req, res, next) => {
+  const statusCode = error.statusCode || 500;
+  const message = error.message || 'Unexpected server error.';
+  res.status(statusCode).json({ error: message });
+});
+
+app.listen(PORT, () => {
   console.log(`Server running on ${APP_BASE_URL}`);
 });
+
+function asyncHandler(handler) {
+  return (req, res, next) => {
+    Promise.resolve(handler(req, res, next)).catch(next);
+  };
+}
 
 async function createBookingAndPayment(payload) {
   const normalized = normalizeAndValidateBooking(payload);
@@ -262,8 +429,8 @@ async function getVippsAccessToken() {
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: {
-      'client_id': requiredEnv('VIPPS_CLIENT_ID'),
-      'client_secret': requiredEnv('VIPPS_CLIENT_SECRET'),
+      client_id: requiredEnv('VIPPS_CLIENT_ID'),
+      client_secret: requiredEnv('VIPPS_CLIENT_SECRET'),
       'Ocp-Apim-Subscription-Key': requiredEnv('VIPPS_SUBSCRIPTION_KEY'),
       'Merchant-Serial-Number': requiredEnv('VIPPS_MSN')
     }
@@ -304,7 +471,7 @@ async function createVippsPayment({ accessToken, reference, amountOere, descript
   const response = await fetch(`${EPAYMENT_BASE_URL}/payments`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': requiredEnv('VIPPS_SUBSCRIPTION_KEY'),
       'Merchant-Serial-Number': requiredEnv('VIPPS_MSN'),
@@ -335,7 +502,7 @@ async function getVippsPayment({ accessToken, reference }) {
   const response = await fetch(`${EPAYMENT_BASE_URL}/payments/${encodeURIComponent(reference)}`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Ocp-Apim-Subscription-Key': requiredEnv('VIPPS_SUBSCRIPTION_KEY'),
       'Merchant-Serial-Number': requiredEnv('VIPPS_MSN')
     }
@@ -353,7 +520,7 @@ async function captureVippsPayment({ accessToken, reference, amountOere }) {
   const response = await fetch(`${EPAYMENT_BASE_URL}/payments/${encodeURIComponent(reference)}/capture`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
       'Ocp-Apim-Subscription-Key': requiredEnv('VIPPS_SUBSCRIPTION_KEY'),
       'Merchant-Serial-Number': requiredEnv('VIPPS_MSN'),
@@ -402,13 +569,17 @@ function updateBooking(reference, patch) {
   return bookings[index];
 }
 
-function ensureDataFile() {
+function ensureDataFiles() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 
   if (!fs.existsSync(BOOKINGS_FILE)) {
     fs.writeFileSync(BOOKINGS_FILE, '[]\n', 'utf8');
+  }
+
+  if (!fs.existsSync(STRINGERS_FILE)) {
+    fs.writeFileSync(STRINGERS_FILE, '[]\n', 'utf8');
   }
 }
 
@@ -426,87 +597,197 @@ function writeBookings(bookings) {
   fs.writeFileSync(BOOKINGS_FILE, JSON.stringify(bookings, null, 2) + '\n', 'utf8');
 }
 
-function parseJsonBody(req) {
+function readStringers() {
+  try {
+    const raw = fs.readFileSync(STRINGERS_FILE, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStringers(stringers) {
+  fs.writeFileSync(STRINGERS_FILE, JSON.stringify(stringers, null, 2) + '\n', 'utf8');
+}
+
+function appendStringer(stringer) {
+  const stringers = readStringers();
+  stringers.push(stringer);
+  writeStringers(stringers);
+}
+
+function toPublicStringer(stringer) {
+  return {
+    id: stringer.id,
+    businessName: stringer.businessName,
+    city: stringer.city,
+    fromPrice: stringer.fromPrice,
+    waitTime: stringer.waitTime,
+    trustSignal: stringer.trustSignal,
+    sports: Array.isArray(stringer.sports) ? stringer.sports : [],
+    createdAt: stringer.createdAt,
+    updatedAt: stringer.updatedAt
+  };
+}
+
+function openAuthDb() {
+  const db = new sqlite3.Database(AUTH_DB_FILE);
+  db.serialize(() => {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+        password_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    `);
+  });
+  return db;
+}
+
+function dbRun(db, sql, params = []) {
   return new Promise((resolve, reject) => {
-    let body = '';
-
-    req.on('data', (chunk) => {
-      body += chunk;
-      if (body.length > 1_000_000) {
-        req.destroy();
-        reject(badRequest('Request body too large.'));
-      }
-    });
-
-    req.on('end', () => {
-      if (!body) {
-        resolve({});
+    db.run(sql, params, function onRun(error) {
+      if (error) {
+        reject(error);
         return;
       }
-
-      try {
-        const parsed = JSON.parse(body);
-        resolve(parsed);
-      } catch {
-        reject(badRequest('Request body must be valid JSON.'));
-      }
+      resolve({ lastID: this.lastID, changes: this.changes });
     });
-
-    req.on('error', (error) => reject(error));
   });
 }
 
-function serveStaticFile(req, res, pathname) {
-  let requestedPath = pathname;
-  if (requestedPath === '/') {
-    requestedPath = '/index.html';
+function dbGet(db, sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (error, row) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(row || null);
+    });
+  });
+}
+
+async function findUserByEmail(email) {
+  const row = await dbGet(authDb, 'SELECT * FROM users WHERE email = ? COLLATE NOCASE', [email]);
+  return row ? mapUserRow(row) : null;
+}
+
+function mapUserRow(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    createdAt: row.created_at
+  };
+}
+
+function normalizeAndValidateRegistration(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw badRequest('Ugyldig registreringsdata.');
   }
 
-  const filePath = path.resolve(PUBLIC_DIR, `.${requestedPath}`);
-  const isWithinPublicDir =
-    filePath === PUBLIC_DIR || filePath.startsWith(PUBLIC_DIR + path.sep);
+  const name = sanitizeString(payload.name, 2, 120, 'name');
+  const email = sanitizeEmail(payload.email);
+  const password = sanitizePassword(payload.password);
 
-  if (!isWithinPublicDir) {
-    return sendText(res, 403, 'Forbidden');
+  return { name, email, password };
+}
+
+function sanitizePassword(value) {
+  if (typeof value !== 'string') {
+    throw badRequest('Passord må være tekst.');
   }
 
-  fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) {
-      return sendText(res, 404, 'Not found');
-    }
+  const password = value.trim();
+  if (password.length < 8) {
+    throw badRequest('Passord må være minst 8 tegn.');
+  }
 
-    const contentType = getContentType(filePath);
-    res.writeHead(200, { 'Content-Type': contentType });
-    fs.createReadStream(filePath).pipe(res);
-  });
+  if (password.length > 128) {
+    throw badRequest('Passord er for langt.');
+  }
+
+  return password;
 }
 
-function getContentType(filePath) {
-  if (filePath.endsWith('.html')) return 'text/html; charset=utf-8';
-  if (filePath.endsWith('.css')) return 'text/css; charset=utf-8';
-  if (filePath.endsWith('.js')) return 'application/javascript; charset=utf-8';
-  if (filePath.endsWith('.json')) return 'application/json; charset=utf-8';
-  if (filePath.endsWith('.svg')) return 'image/svg+xml';
-  if (filePath.endsWith('.png')) return 'image/png';
-  if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) return 'image/jpeg';
-  return 'application/octet-stream';
+function sanitizeLoginPassword(value) {
+  if (typeof value !== 'string' || !value.trim()) {
+    throw badRequest('Passord mangler.');
+  }
+
+  return value.trim();
 }
 
-function sendJson(res, statusCode, payload) {
-  const body = JSON.stringify(payload);
-  res.writeHead(statusCode, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Content-Length': Buffer.byteLength(body)
-  });
-  res.end(body);
+function normalizeAndValidateStringer(payload, owner) {
+  if (!payload || typeof payload !== 'object') {
+    throw badRequest('Invalid stringer payload.');
+  }
+
+  const businessName = sanitizeString(payload.businessName, 2, 120, 'businessName');
+  const city = toTitleCase(sanitizeString(payload.city, 2, 80, 'city'));
+  const ownerName = sanitizeString(owner.name, 2, 120, 'ownerName');
+  const ownerEmail = sanitizeEmail(owner.email);
+  const phone = sanitizePhone(payload.phone);
+  const trustSignal = sanitizeString(payload.trustSignal, 2, 120, 'trustSignal');
+  const waitTime = sanitizeString(payload.waitTime, 2, 60, 'waitTime');
+  const description = sanitizeOptionalString(payload.description, 0, 420);
+
+  const fromPrice = Number(payload.fromPrice);
+  if (!Number.isFinite(fromPrice) || fromPrice <= 0 || fromPrice > 10000) {
+    throw badRequest('fromPrice must be a positive number.');
+  }
+
+  if (!Array.isArray(payload.sports) || payload.sports.length === 0) {
+    throw badRequest('sports must be a non-empty array.');
+  }
+
+  const normalizedSports = [...new Set(payload.sports.map(normalizeSport).filter(Boolean))];
+  if (normalizedSports.length === 0) {
+    throw badRequest('sports contains no valid values.');
+  }
+
+  return {
+    businessName,
+    city,
+    ownerUserId: owner.id,
+    ownerName,
+    ownerEmail,
+    phone,
+    fromPrice: Math.round(fromPrice),
+    waitTime,
+    trustSignal,
+    description,
+    sports: normalizedSports
+  };
 }
 
-function sendText(res, statusCode, body) {
-  res.writeHead(statusCode, {
-    'Content-Type': 'text/plain; charset=utf-8',
-    'Content-Length': Buffer.byteLength(body)
-  });
-  res.end(body);
+function normalizeSport(value) {
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase();
+
+  if (!raw) {
+    return '';
+  }
+
+  if (raw.startsWith('tennis')) return 'Tennis';
+  if (raw.startsWith('squash')) return 'Squash';
+  if (raw.startsWith('badminton')) return 'Badminton';
+  if (raw.startsWith('padel')) return 'Padel';
+  return '';
+}
+
+function toTitleCase(value) {
+  return String(value || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
 }
 
 function sanitizeString(value, minLength, maxLength, fieldName) {

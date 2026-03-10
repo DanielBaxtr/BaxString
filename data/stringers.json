@@ -1,0 +1,20 @@
+[
+  {
+    "id": "79457ae7-b28b-4ba5-9c1d-1d34bf7ab46b",
+    "businessName": "Bax",
+    "city": "Trondheim",
+    "ownerUserId": 1,
+    "ownerName": "Daniel Baxter",
+    "ownerEmail": "danielerlend.baxter@gmail.com",
+    "phone": "4791234354",
+    "fromPrice": 150,
+    "waitTime": "24 timer",
+    "trustSignal": "har strengt før",
+    "description": "erfaren",
+    "sports": [
+      "Tennis"
+    ],
+    "createdAt": "2026-03-10T12:17:29.020Z",
+    "updatedAt": "2026-03-10T12:17:29.020Z"
+  }
+]

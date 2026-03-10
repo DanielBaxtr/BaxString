@@ -1,74 +1,176 @@
 <!doctype html>
-<html lang="en">
+<html lang="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stringer Booking</title>
-    <link rel="stylesheet" href="./styles.css?v=6" />
+    <title>Stringr</title>
+    <link rel="stylesheet" href="./homepage.css?v=8" />
   </head>
   <body>
-    <main class="container">
-      <section class="card hero">
-        <h1>Tennis Racket Restringing</h1>
-        <p>Velg tension og string option, og betal manuelt etter booking.</p>
+    <header class="site-header">
+      <div class="container nav-row">
+        <a href="#hjem" class="logo">Stringr</a>
+
+        <nav class="main-nav" aria-label="Hovedmeny">
+          <a href="#hjem">Hjem</a>
+          <a href="#om-oss">Om oss</a>
+          <a href="#finn-stringer">Finn stringer</a>
+          <a href="#kontakt">Kontakt</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="./login.html" class="login-link">Logg inn</a>
+          <a href="./add-listing.html" class="add-listing-btn">+ Stringere! Legg til oppføring</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="hjem">
+      <section class="hero" id="finn-stringer">
+        <div class="container hero-inner">
+          <h1>Finn racket-strenging nær deg</h1>
+          <p class="hero-subtitle">
+            Sammenlign stringere for tennis, squash og badminton i ditt område, og book raskt.
+          </p>
+
+          <form id="search-form" class="search-shell" aria-label="Søk etter stringere">
+            <label class="field">
+              <span>Sport</span>
+              <input
+                id="sport-input"
+                name="sport"
+                type="text"
+                list="sport-options"
+                placeholder="Tennis, Squash, Badminton"
+                required
+              />
+              <datalist id="sport-options">
+                <option value="Tennis"></option>
+                <option value="Squash"></option>
+                <option value="Badminton"></option>
+                <option value="Padel"></option>
+              </datalist>
+            </label>
+
+            <label class="field">
+              <span>Sted</span>
+              <input
+                id="location-input"
+                name="location"
+                type="text"
+                list="city-options"
+                placeholder="By eller område"
+                required
+              />
+              <datalist id="city-options">
+                <option value="Oslo"></option>
+                <option value="Bergen"></option>
+                <option value="Trondheim"></option>
+                <option value="Stavanger"></option>
+              </datalist>
+            </label>
+
+            <button type="submit" class="search-btn">Søk</button>
+          </form>
+
+          <p class="hero-trust">
+            Lokale og verifiserte stringere. Tydelige priser. Tilpasset tension. Rask levering.
+          </p>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>Book Your Slot</h2>
-        <form id="booking-form">
-          <div class="grid">
-            <label>
-              Full name
-              <input name="customerName" type="text" required minlength="2" maxlength="80" />
-            </label>
+      <section class="sports-categories" aria-label="Velg sport">
+        <div class="container category-grid">
+          <button class="category-card" type="button" data-sport="Badminton">
+            <span class="category-icon" aria-hidden="true">🏸</span>
+            <span>Badminton</span>
+          </button>
+          <button class="category-card" type="button" data-sport="Squash">
+            <span class="category-icon" aria-hidden="true">⬤</span>
+            <span>Squash</span>
+          </button>
+          <button class="category-card" type="button" data-sport="Tennis">
+            <span class="category-icon" aria-hidden="true">🎾</span>
+            <span>Tennis</span>
+          </button>
+        </div>
+      </section>
 
-            <label>
-              Email
-              <input name="email" type="email" required />
-            </label>
-
-            <label>
-              Phone (Norway)
-              <input name="phone" type="tel" required placeholder="e.g. 91234567" />
-            </label>
-
-            <label>
-              Racket model (optional)
-              <input name="racketModel" type="text" maxlength="80" />
-            </label>
+      <section class="how-it-works" id="om-oss">
+        <div class="container">
+          <h2>Hvordan det fungerer</h2>
+          <div class="steps-grid">
+            <article class="step-card">
+              <span class="step-icon" aria-hidden="true">🔎</span>
+              <h3>Søk etter sport og sted</h3>
+              <p>Velg sport og område for å finne relevante stringere i nærheten.</p>
+            </article>
+            <article class="step-card">
+              <span class="step-icon" aria-hidden="true">📊</span>
+              <h3>Sammenlign stringere</h3>
+              <p>Se pris, leveringstid, sportstyper og tillitssignaler på ett sted.</p>
+            </article>
+            <article class="step-card">
+              <span class="step-icon" aria-hidden="true">✅</span>
+              <h3>Bestill strenging</h3>
+              <p>Gå videre til booking, velg tension og service, og send inn bestilling.</p>
+            </article>
           </div>
+        </div>
+      </section>
 
-          <label>
-            Tension: <span id="tension-display">24.0</span> kg
-            <input id="tension-input" name="tensionKg" type="range" min="16" max="32" step="0.5" value="24" />
-          </label>
+      <section class="why-us">
+        <div class="container">
+          <h2>Hvorfor velge oss</h2>
+          <div class="features-grid">
+            <article class="feature-card">
+              <h3>Lokale stringere</h3>
+              <p>Finn profesjonelle aktører nær deg i stedet for lange omveier.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Enkelt å sammenligne</h3>
+              <p>Pris, sport, leveringstid og profil er lett å se før du velger.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Rask bestilling</h3>
+              <p>Fra søk til booking på få steg med tydelige valg underveis.</p>
+            </article>
+            <article class="feature-card">
+              <h3>For flere racketsporter</h3>
+              <p>Støtter tennis, squash, badminton og padel på samme plattform.</p>
+            </article>
+          </div>
+        </div>
+      </section>
 
-          <fieldset>
-            <legend>String option</legend>
-            <label class="inline-option">
-              <input type="radio" name="hasOwnString" value="yes" checked />
-              I bring my own string
-            </label>
-            <label class="inline-option">
-              <input type="radio" name="hasOwnString" value="no" />
-              Include string material
-            </label>
-          </fieldset>
-
-          <label>
-            Notes (optional)
-            <textarea name="notes" rows="4" maxlength="500" placeholder="Any preferred pattern or details"></textarea>
-          </label>
-
-          <div class="summary" id="price-summary"></div>
-          <p class="vipps-note">Betaling: <strong>Vipps til 97908575</strong></p>
-
-          <button id="submit-btn" type="submit">Send booking</button>
-          <p id="form-message" class="message" aria-live="polite"></p>
-        </form>
+      <section class="cta-section" id="legg-til">
+        <div class="container cta-inner">
+          <h2>Driver du med strenging?</h2>
+          <p>Bli synlig for kunder i ditt område ved å legge til oppføringen din.</p>
+          <a class="cta-primary" href="./add-listing.html">Legg til oppføring</a>
+        </div>
       </section>
     </main>
 
-    <script src="./app.js?v=2"></script>
+    <footer class="site-footer" id="kontakt">
+      <div class="container footer-inner">
+        <div>
+          <p class="footer-brand">Stringr</p>
+          <p class="footer-copy">© 2026 Stringr. Alle rettigheter forbeholdt.</p>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer lenker">
+          <a href="#hjem">Hjem</a>
+          <a href="#om-oss">Om oss</a>
+          <a href="#finn-stringer">Finn stringer</a>
+          <a href="#kontakt">Kontakt</a>
+        </nav>
+
+        <a id="login" class="footer-login" href="./login.html">Logg inn</a>
+      </div>
+    </footer>
+
+    <script src="./nav-auth.js?v=1"></script>
+    <script src="./home.js?v=9"></script>
   </body>
 </html>

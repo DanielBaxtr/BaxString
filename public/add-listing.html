@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legg Til Oppføring | Stringr</title>
+    <link rel="stylesheet" href="./auth.css?v=3" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-row">
+        <a href="./index.html#hjem" class="logo">Stringr</a>
+
+        <nav class="main-nav" aria-label="Hovedmeny">
+          <a href="./index.html#hjem">Hjem</a>
+          <a href="./index.html#om-oss">Om oss</a>
+          <a href="./index.html#finn-stringer">Finn stringer</a>
+          <a href="./index.html#kontakt">Kontakt</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="./login.html" class="login-link">Logg inn</a>
+          <a href="./add-listing.html" class="add-listing-btn">+ Stringere! Legg til oppføring</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="panel">
+        <h1>Legg til stringer-oppføring</h1>
+        <p class="subtitle">
+          Opprett en profesjonell profil med pris, sporter og ventetid slik at kunder kan finne deg.
+        </p>
+        <p id="session-info" class="helper"></p>
+        <button id="logout-btn" type="button" class="secondary-btn" hidden>Logg ut</button>
+      </section>
+
+      <section id="listing-gate" class="panel">
+        <h2>Du må være logget inn</h2>
+        <p class="subtitle">Logg inn eller registrer deg for å legge til en oppføring.</p>
+        <div class="gate-actions">
+          <a id="gate-login-link" class="primary-btn" href="./login.html">Logg inn</a>
+          <a id="gate-register-link" class="secondary-btn" href="./register.html">Registrer</a>
+        </div>
+      </section>
+
+      <section id="role-panel" class="panel" hidden>
+        <h2>Velg rolle</h2>
+        <p class="subtitle">Før vi spør om pris og ventetid må du velge om du er stringer eller kunde.</p>
+
+        <div class="role-grid">
+          <label class="role-card">
+            <input type="radio" name="accountRole" value="stringer" />
+            <span>Jeg er stringer</span>
+          </label>
+          <label class="role-card">
+            <input type="radio" name="accountRole" value="customer" />
+            <span>Jeg er kunde</span>
+          </label>
+        </div>
+
+        <p id="role-selection-message" class="status-message" aria-live="polite"></p>
+      </section>
+
+      <section id="listing-card" class="panel" hidden>
+        <h2>Oppføringsdetaljer</h2>
+        <form id="listing-form" class="auth-form" novalidate>
+          <div class="field-grid">
+            <label>
+              Firmanavn / profilnavn
+              <input name="businessName" type="text" placeholder="Eksempel: Oslo String Studio" required />
+            </label>
+
+            <label>
+              By
+              <select name="city" required>
+                <option value="">Velg by</option>
+                <option value="Oslo">Oslo</option>
+                <option value="Bergen">Bergen</option>
+                <option value="Trondheim">Trondheim</option>
+                <option value="Stavanger">Stavanger</option>
+              </select>
+            </label>
+
+            <label>
+              Kontaktperson
+              <input id="owner-name" name="ownerName" type="text" required />
+            </label>
+
+            <label>
+              Kontakt e-post
+              <input id="owner-email" name="ownerEmail" type="email" required />
+            </label>
+
+            <label>
+              Telefon
+              <input name="phone" type="tel" placeholder="f.eks. 91234567" required />
+            </label>
+
+            <label>
+              Fra-pris (NOK)
+              <input name="fromPrice" type="number" min="100" step="5" placeholder="175" required />
+            </label>
+
+            <label>
+              Ventetid
+              <select name="waitTime" required>
+                <option value="">Velg ventetid</option>
+                <option value="Samme dag">Samme dag</option>
+                <option value="24 timer">24 timer</option>
+                <option value="24-48 timer">24-48 timer</option>
+                <option value="2-3 dager">2-3 dager</option>
+              </select>
+            </label>
+
+            <label>
+              Trust-signal
+              <input name="trustSignal" type="text" placeholder="Eksempel: Erfaren stringer" required />
+            </label>
+          </div>
+
+          <fieldset class="sport-options">
+            <legend>Hvilke sporter tilbyr du?</legend>
+            <div class="sport-grid">
+              <label><input type="checkbox" name="sports" value="Tennis" /> Tennis</label>
+              <label><input type="checkbox" name="sports" value="Squash" /> Squash</label>
+              <label><input type="checkbox" name="sports" value="Badminton" /> Badminton</label>
+              <label><input type="checkbox" name="sports" value="Padel" /> Padel</label>
+            </div>
+          </fieldset>
+
+          <label>
+            Kort beskrivelse
+            <textarea
+              name="description"
+              maxlength="420"
+              placeholder="Beskriv erfaring, leveringstid eller tjenesten din."
+              required
+            ></textarea>
+          </label>
+
+          <p class="listing-note">Oppføringen lagres sikkert på serveren når du sender inn.</p>
+          <button type="submit" class="primary-btn">Send oppføring</button>
+        </form>
+
+        <p id="listing-message" class="status-message" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <p class="footer-simple">© 2026 Stringr</p>
+    <script src="./auth.js?v=6"></script>
+  </body>
+</html>
