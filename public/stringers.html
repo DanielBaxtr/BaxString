@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Velg stringer | Stringr</title>
+    <link rel="stylesheet" href="./homepage.css?v=7" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-row">
+        <a href="./index.html#hjem" class="logo">Stringr</a>
+
+        <nav class="main-nav" aria-label="Hovedmeny">
+          <a href="./index.html#hjem">Hjem</a>
+          <a href="./index.html#om-oss">Om oss</a>
+          <a href="./index.html#finn-stringer">Finn stringer</a>
+          <a href="./index.html#kontakt">Kontakt</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="./login.html" class="login-link">Logg inn</a>
+          <a href="./add-listing.html" class="add-listing-btn">+ Stringere! Legg til oppføring</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero picker-hero">
+        <div class="container hero-inner">
+          <h1>Velg stringer</h1>
+          <p class="hero-subtitle">Sammenlign pris og ventetid, og velg hvem som skal strenge racketen din.</p>
+          <p id="selected-filters" class="hero-trust"></p>
+          <a id="change-search-link" class="search-btn" href="./index.html#hjem">Endre søk</a>
+        </div>
+      </section>
+
+      <section class="stringer-section">
+        <div class="container">
+          <div class="section-heading">
+            <h2>Tilgjengelige stringere</h2>
+            <p id="picker-meta"></p>
+          </div>
+          <div id="stringer-picker-grid" class="stringer-grid" aria-live="polite"></div>
+          <p id="picker-empty" class="empty-state" hidden>Ingen stringere matcher valgene dine akkurat nå.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <p class="footer-brand">Stringr</p>
+          <p class="footer-copy">© 2026 Stringr. Alle rettigheter forbeholdt.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./nav-auth.js?v=1"></script>
+    <script src="./stringers.js?v=7"></script>
+  </body>
+</html>

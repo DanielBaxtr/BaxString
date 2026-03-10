@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="en">
+<html lang="no">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Booking Status</title>
-    <link rel="stylesheet" href="./styles.css?v=6" />
+    <title>Bestillingsstatus | Stringr</title>
+    <link rel="stylesheet" href="./styles.css?v=8" />
   </head>
   <body>
     <main class="container narrow">
       <section class="card">
-        <h1>Booking Status</h1>
+        <h1>Bestillingsstatus</h1>
         <p id="status-message">Sjekker bookingstatus ...</p>
         <p class="vipps-note">Betaling: <strong>Vipps til 97908575</strong></p>
         <div id="status-details"></div>
-        <a class="link-button" href="./index.html">Back to booking form</a>
+        <a class="link-button" href="./booking.html">Tilbake til bestilling</a>
       </section>
     </main>
 
@@ -25,7 +25,7 @@
         const detailsEl = document.getElementById('status-details');
 
         if (!reference) {
-          messageEl.textContent = 'Missing booking reference in URL.';
+          messageEl.textContent = 'Mangler bestillingsreferanse i URL.';
           return;
         }
 
@@ -34,7 +34,7 @@
           const data = await response.json();
 
           if (!response.ok) {
-            throw new Error(data.error || 'Unable to verify payment status.');
+            throw new Error(data.error || 'Kunne ikke verifisere bestillingsstatus.');
           }
 
           if (data.paymentMode === 'manual' || data.status === 'awaiting_manual_payment') {
@@ -42,23 +42,23 @@
             messageEl.textContent = `Booking mottatt. Vipps NOK ${Number(data.amountNok).toFixed(2)} til ${vippsNumber} og merk betalingen med referanse ${data.reference}.`;
             messageEl.classList.add('status-ok');
           } else if (data.status === 'paid') {
-            messageEl.textContent = 'Payment confirmed. Your booking is registered.';
+            messageEl.textContent = 'Betaling bekreftet. Bestillingen din er registrert.';
             messageEl.classList.add('status-ok');
           } else if (data.status === 'authorized') {
-            messageEl.textContent = 'Payment authorized. We will confirm capture shortly.';
+            messageEl.textContent = 'Betaling autorisert. Vi bekrefter fullføring snart.';
           } else if (data.status === 'payment_failed') {
-            messageEl.textContent = 'Payment was not completed. Please try again.';
+            messageEl.textContent = 'Betalingen ble ikke fullført. Prøv igjen.';
           } else {
-            messageEl.textContent = 'Payment is still pending. Refresh this page in a moment.';
+            messageEl.textContent = 'Betaling er fortsatt under behandling. Oppdater siden om litt.';
           }
 
           detailsEl.innerHTML = `
             <ul>
-              <li><strong>Reference:</strong> ${data.reference}</li>
+              <li><strong>Referanse:</strong> ${data.reference}</li>
               <li><strong>Status:</strong> ${data.status}</li>
-              <li><strong>Payment mode:</strong> ${data.paymentMode || 'vipps'}</li>
-              <li><strong>Vipps state:</strong> ${data.vippsState || 'n/a'}</li>
-              <li><strong>Amount:</strong> NOK ${Number(data.amountNok).toFixed(2)}</li>
+              <li><strong>Betalingsmåte:</strong> ${data.paymentMode || 'vipps'}</li>
+              <li><strong>Vipps-status:</strong> ${data.vippsState || 'n/a'}</li>
+              <li><strong>Beløp:</strong> NOK ${Number(data.amountNok).toFixed(2)}</li>
             </ul>
           `;
         } catch (error) {
