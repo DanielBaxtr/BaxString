@@ -261,6 +261,8 @@ function initAddListingPage() {
   const roleInputs = Array.from(document.querySelectorAll('input[name="accountRole"]'));
   const profileSummary = document.getElementById('profile-summary');
   const profileSummaryGrid = document.getElementById('profile-summary-grid');
+  const profileActions = document.getElementById('profile-actions');
+  const profileLogoutBtn = document.getElementById('profile-logout-btn');
   const listingCard = document.getElementById('listing-card');
   const listingForm = document.getElementById('listing-form');
   const sessionInfo = document.getElementById('session-info');
@@ -354,11 +356,24 @@ function initAddListingPage() {
     profileSummaryGrid.appendChild(item);
   }
 
-  function renderListingSummary(listing) {
+  function renderProfileSummary(role, listing) {
     if (!profileSummaryGrid) return;
     profileSummaryGrid.innerHTML = '';
 
-    if (!listing) return;
+    if (!role) return;
+
+    const roleText = role === 'stringer' ? 'Stringer' : 'Kunde';
+    renderSummaryItem('Min rolle', roleText);
+
+    if (role !== 'stringer') {
+      renderSummaryItem('Profilstatus', 'Ingen stringer-oppføring registrert');
+      return;
+    }
+
+    if (!listing) {
+      renderSummaryItem('Profilstatus', 'Mangler detaljer. Trykk "Gjør endringer" for å fylle inn.');
+      return;
+    }
 
     const sportsText = Array.isArray(listing.sports) && listing.sports.length > 0 ? listing.sports.join(', ') : 'Ikke valgt';
 
@@ -384,20 +399,14 @@ function initAddListingPage() {
     setRolePanelText(role, false);
     applyRole(currentUser?.email, role, false);
 
-    if (role === 'stringer' && currentListing) {
+    if (role) {
       if (profileSummary) profileSummary.hidden = false;
-      renderListingSummary(currentListing);
-      showStatus(roleMessage, 'Rolle: Stringer', 'success');
+      renderProfileSummary(role, currentListing);
+      showStatus(roleMessage, '', '');
       return;
     }
 
     if (profileSummary) profileSummary.hidden = true;
-
-    if (role === 'customer') {
-      showStatus(roleMessage, 'Rolle: Kunde', 'success');
-      return;
-    }
-
     showStatus(roleMessage, 'Velg rolle for å fortsette.', '');
   }
 
@@ -455,6 +464,7 @@ function initAddListingPage() {
     currentUser = user;
     gate.hidden = true;
     if (rolePanel) rolePanel.hidden = false;
+    if (profileActions) profileActions.hidden = false;
     if (sessionInfo) {
       sessionInfo.textContent = `Innlogget som ${user.email}.`;
     }
@@ -466,6 +476,13 @@ function initAddListingPage() {
     if (ownerEmailInput) {
       ownerEmailInput.value = user.email || '';
       ownerEmailInput.readOnly = true;
+    }
+
+    if (profileLogoutBtn) {
+      profileLogoutBtn.addEventListener('click', async () => {
+        await requestJson('/api/logout', { method: 'POST' });
+        goTo('./login.html?next=./add-listing.html');
+      });
     }
 
     let savedRole = getUserRole(user.email);
@@ -619,6 +636,7 @@ function initAddListingPage() {
       if (rolePanel) rolePanel.hidden = true;
       if (listingCard) listingCard.hidden = true;
       if (profileSummary) profileSummary.hidden = true;
+      if (profileActions) profileActions.hidden = true;
       if (sessionInfo) sessionInfo.textContent = 'Ingen aktiv bruker.';
       return;
     }
