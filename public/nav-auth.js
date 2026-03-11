@@ -22,7 +22,7 @@ function applyLoggedInState(user) {
   const loginLinks = document.querySelectorAll('.login-link, .footer-login');
   loginLinks.forEach((link) => {
     if (link.tagName !== 'A') return;
-    link.textContent = user?.name ? `Min side (${user.name})` : 'Min side';
+    link.textContent = 'Min profil';
     link.setAttribute('href', './add-listing.html');
   });
 }

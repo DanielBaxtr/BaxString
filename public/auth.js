@@ -253,7 +253,6 @@ function initAddListingPage() {
   if (!gate) return;
 
   const rolePanel = document.getElementById('role-panel');
-  const roleHeading = document.getElementById('role-heading');
   const roleSubtitle = document.getElementById('role-subtitle');
   const roleGrid = document.getElementById('role-grid');
   const editProfileBtn = document.getElementById('edit-profile-btn');
@@ -298,15 +297,12 @@ function initAddListingPage() {
   }
 
   function setRolePanelText(role, editingMode) {
-    if (!roleHeading || !roleSubtitle) return;
+    if (!roleSubtitle) return;
 
     if (!role) {
-      roleHeading.textContent = 'Velg rolle';
       roleSubtitle.textContent = 'Før vi spør om pris og ventetid må du velge om du er stringer eller kunde.';
       return;
     }
-
-    roleHeading.textContent = 'Din rolle';
 
     if (editingMode) {
       roleSubtitle.textContent = 'Du kan endre rolle eller oppdatere oppføringen din under.';
@@ -389,6 +385,7 @@ function initAddListingPage() {
 
   function setViewMode(role) {
     isEditing = false;
+    if (rolePanel) rolePanel.hidden = true;
     if (roleGrid) roleGrid.hidden = true;
     if (listingCard) listingCard.hidden = true;
     if (editProfileBtn) {
@@ -412,6 +409,7 @@ function initAddListingPage() {
 
   function setEditMode(role) {
     isEditing = true;
+    if (rolePanel) rolePanel.hidden = false;
     if (roleGrid) roleGrid.hidden = false;
     if (profileSummary) profileSummary.hidden = true;
     if (editProfileBtn) {
@@ -463,7 +461,7 @@ function initAddListingPage() {
   async function initForAuthenticatedUser(user) {
     currentUser = user;
     gate.hidden = true;
-    if (rolePanel) rolePanel.hidden = false;
+    if (rolePanel) rolePanel.hidden = true;
     if (profileActions) profileActions.hidden = false;
     if (sessionInfo) {
       sessionInfo.textContent = `Innlogget som ${user.email}.`;
@@ -530,6 +528,7 @@ function initAddListingPage() {
 
     if (!savedRole) {
       isEditing = true;
+      if (rolePanel) rolePanel.hidden = false;
       if (editProfileBtn) editProfileBtn.hidden = true;
       if (roleGrid) roleGrid.hidden = false;
       setRolePanelText('', true);

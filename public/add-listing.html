@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Min Profil | Stringr</title>
-    <link rel="stylesheet" href="./auth.css?v=5" />
+    <link rel="stylesheet" href="./auth.css?v=6" />
   </head>
   <body>
     <header class="site-header">
@@ -25,53 +25,45 @@
     </header>
 
     <main class="page-shell">
-      <section class="panel">
+      <section id="profile-panel" class="panel">
         <h1>Min profil</h1>
         <p class="subtitle">
           Her ser du informasjonen du har valgt. Trykk "Gjør endringer" for å bytte rolle eller oppdatere detaljer.
         </p>
         <p id="session-info" class="helper"></p>
-      </section>
+        <section id="listing-gate" class="profile-block">
+          <h2>Du må være logget inn</h2>
+          <p class="subtitle">Logg inn eller registrer deg for å legge til en oppføring.</p>
+          <div class="gate-actions">
+            <a id="gate-login-link" class="primary-btn" href="./login.html">Logg inn</a>
+            <a id="gate-register-link" class="secondary-btn" href="./register.html">Registrer</a>
+          </div>
+        </section>
 
-      <section id="listing-gate" class="panel">
-        <h2>Du må være logget inn</h2>
-        <p class="subtitle">Logg inn eller registrer deg for å legge til en oppføring.</p>
-        <div class="gate-actions">
-          <a id="gate-login-link" class="primary-btn" href="./login.html">Logg inn</a>
-          <a id="gate-register-link" class="secondary-btn" href="./register.html">Registrer</a>
-        </div>
-      </section>
+        <section id="profile-summary" class="profile-block" hidden>
+          <div id="profile-summary-grid" class="summary-grid"></div>
+        </section>
 
-      <section id="role-panel" class="panel" hidden>
-        <h2 id="role-heading">Velg rolle</h2>
-        <p id="role-subtitle" class="subtitle">
-          Før vi spør om pris og ventetid må du velge om du er stringer eller kunde.
-        </p>
+        <section id="role-panel" class="profile-block" hidden>
+          <p id="role-subtitle" class="subtitle">
+            Før vi spør om pris og ventetid må du velge om du er stringer eller kunde.
+          </p>
 
-        <div id="role-grid" class="role-grid">
-          <label class="role-card">
-            <input type="radio" name="accountRole" value="stringer" />
-            <span>Jeg er stringer</span>
-          </label>
-          <label class="role-card">
-            <input type="radio" name="accountRole" value="customer" />
-            <span>Jeg er kunde</span>
-          </label>
-        </div>
+          <div id="role-grid" class="role-grid">
+            <label class="role-card">
+              <input type="radio" name="accountRole" value="stringer" />
+              <span>Jeg er stringer</span>
+            </label>
+            <label class="role-card">
+              <input type="radio" name="accountRole" value="customer" />
+              <span>Jeg er kunde</span>
+            </label>
+          </div>
 
-        <div class="gate-actions">
-          <button id="edit-profile-btn" type="button" class="secondary-btn" hidden>Gjør endringer</button>
-        </div>
+          <p id="role-selection-message" class="status-message" aria-live="polite"></p>
+        </section>
 
-        <p id="role-selection-message" class="status-message" aria-live="polite"></p>
-      </section>
-
-      <section id="profile-summary" class="panel" hidden>
-        <h2>Info om oppføringen din</h2>
-        <div id="profile-summary-grid" class="summary-grid"></div>
-      </section>
-
-      <section id="listing-card" class="panel" hidden>
+        <section id="listing-card" class="profile-block" hidden>
         <h2>Oppføringsdetaljer</h2>
         <form id="listing-form" class="auth-form" novalidate>
           <div class="field-grid">
@@ -153,14 +145,17 @@
         </form>
 
         <p id="listing-message" class="status-message" aria-live="polite"></p>
-      </section>
+        </section>
 
-      <section id="profile-actions" class="panel" hidden>
-        <button id="profile-logout-btn" type="button" class="secondary-btn">Logg ut</button>
+        <section id="profile-actions" class="profile-block" hidden>
+          <button id="edit-profile-btn" type="button" class="secondary-btn" hidden>Gjør endringer</button>
+          <button id="profile-logout-btn" type="button" class="secondary-btn">Logg ut</button>
+        </section>
       </section>
     </main>
 
     <p class="footer-simple">© 2026 Stringr</p>
-    <script src="./auth.js?v=8"></script>
+    <script src="./nav-auth.js?v=3"></script>
+    <script src="./auth.js?v=9"></script>
   </body>
 </html>
