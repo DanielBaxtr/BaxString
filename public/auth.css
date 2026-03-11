@@ -395,6 +395,15 @@ fieldset.sport-options {
   font-size: 0.88rem;
 }
 
+#profile-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+#profile-logout-btn {
+  min-width: 120px;
+}
+
 .footer-simple {
   margin: 1.2rem auto 1.6rem;
   width: min(760px, calc(100% - 2rem));

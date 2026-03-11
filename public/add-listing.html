@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Legg Til Oppføring | Stringr</title>
-    <link rel="stylesheet" href="./auth.css?v=4" />
+    <title>Min Profil | Stringr</title>
+    <link rel="stylesheet" href="./auth.css?v=5" />
   </head>
   <body>
     <header class="site-header">
@@ -26,9 +26,9 @@
 
     <main class="page-shell">
       <section class="panel">
-        <h1>Legg til stringer-oppføring</h1>
+        <h1>Min profil</h1>
         <p class="subtitle">
-          Opprett en profesjonell profil med pris, sporter og ventetid slik at kunder kan finne deg.
+          Her ser du informasjonen du har valgt. Trykk "Gjør endringer" for å bytte rolle eller oppdatere detaljer.
         </p>
         <p id="session-info" class="helper"></p>
       </section>
@@ -67,7 +67,7 @@
       </section>
 
       <section id="profile-summary" class="panel" hidden>
-        <h2>Din oppføring</h2>
+        <h2>Info om oppføringen din</h2>
         <div id="profile-summary-grid" class="summary-grid"></div>
       </section>
 
@@ -154,9 +154,13 @@
 
         <p id="listing-message" class="status-message" aria-live="polite"></p>
       </section>
+
+      <section id="profile-actions" class="panel" hidden>
+        <button id="profile-logout-btn" type="button" class="secondary-btn">Logg ut</button>
+      </section>
     </main>
 
     <p class="footer-simple">© 2026 Stringr</p>
-    <script src="./auth.js?v=7"></script>
+    <script src="./auth.js?v=8"></script>
   </body>
 </html>
