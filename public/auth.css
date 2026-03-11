@@ -129,6 +129,8 @@ body {
 
 .profile-block {
   margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
 }
 
 h1,
@@ -305,9 +307,9 @@ textarea:focus {
 }
 
 .role-card {
-  border: 1px solid var(--line);
+  border: 1px solid #cfe1f8;
   border-radius: 12px;
-  background: #f9fcff;
+  background: #fafdff;
   min-height: 54px;
   padding: 0.7rem 0.75rem;
   display: flex;
@@ -325,7 +327,7 @@ textarea:focus {
 
 .role-card.selected {
   border-color: rgba(74, 143, 232, 0.85);
-  background: #eef6ff;
+  background: #edf6ff;
   box-shadow: inset 0 0 0 1px rgba(74, 143, 232, 0.35);
 }
 
@@ -340,16 +342,12 @@ textarea:focus {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #f9fcff;
-  overflow: hidden;
+  border-top: 1px solid var(--line);
 }
 
 .summary-item {
   border-bottom: 1px solid var(--line);
-  background: transparent;
-  padding: 0.62rem 0.7rem;
+  padding: 0.62rem 0.2rem;
 }
 
 .summary-item:last-child {
@@ -410,8 +408,6 @@ fieldset.sport-options {
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line);
 }
 
 #profile-logout-btn {
