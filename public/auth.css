@@ -331,6 +331,36 @@ textarea:focus {
   margin: 0;
 }
 
+.summary-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.summary-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f9fcff;
+  padding: 0.62rem 0.7rem;
+}
+
+.summary-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summary-value {
+  margin-top: 0.2rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 fieldset.sport-options {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -398,7 +428,8 @@ fieldset.sport-options {
 
   .field-grid,
   .sport-grid,
-  .role-grid {
+  .role-grid,
+  .summary-grid {
     grid-template-columns: 1fr;
   }
 }
