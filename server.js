@@ -192,6 +192,28 @@ app.get('/api/stringers', (req, res) => {
   return res.status(200).json(stringers);
 });
 
+app.get(
+  '/api/my-stringer',
+  asyncHandler(async (req, res) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Du må være logget inn.' });
+    }
+
+    const owner = await dbGet(authDb, 'SELECT * FROM users WHERE id = ?', [req.session.userId]);
+    if (!owner) {
+      req.session.destroy(() => {});
+      return res.status(401).json({ error: 'Du må være logget inn.' });
+    }
+
+    const existing = findLatestStringerByOwnerId(owner.id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Ingen oppføring funnet.' });
+    }
+
+    return res.status(200).json({ stringer: toOwnerStringer(existing) });
+  })
+);
+
 app.post(
   '/api/stringers',
   asyncHandler(async (req, res) => {
@@ -206,11 +228,22 @@ app.post(
     }
 
     const normalized = normalizeAndValidateStringer(req.body || {}, mapUserRow(owner));
+    const existing = findLatestStringerByOwnerId(owner.id);
+    const now = new Date().toISOString();
+
+    if (existing) {
+      const updated = updateStringerById(existing.id, {
+        ...normalized,
+        updatedAt: now
+      });
+      return res.status(200).json(toPublicStringer(updated));
+    }
+
     const stringer = {
       id: crypto.randomUUID(),
       ...normalized,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now
     };
 
     appendStringer(stringer);
@@ -617,6 +650,47 @@ function appendStringer(stringer) {
   writeStringers(stringers);
 }
 
+function findLatestStringerByOwnerId(ownerUserId) {
+  const ownerId = Number(ownerUserId);
+  if (!Number.isFinite(ownerId)) {
+    return null;
+  }
+
+  const stringers = readStringers().filter((item) => Number(item.ownerUserId) === ownerId);
+  if (stringers.length === 0) {
+    return null;
+  }
+
+  stringers.sort((a, b) => {
+    const aTime = Date.parse(a.updatedAt || a.createdAt || '') || 0;
+    const bTime = Date.parse(b.updatedAt || b.createdAt || '') || 0;
+    return bTime - aTime;
+  });
+
+  return stringers[0];
+}
+
+function updateStringerById(id, patch) {
+  const stringers = readStringers();
+  const index = stringers.findIndex((item) => item.id === id);
+  if (index < 0) {
+    const err = new Error('Stringer not found for update.');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const original = stringers[index];
+  stringers[index] = {
+    ...original,
+    ...patch,
+    id: original.id,
+    ownerUserId: original.ownerUserId,
+    createdAt: original.createdAt
+  };
+  writeStringers(stringers);
+  return stringers[index];
+}
+
 function toPublicStringer(stringer) {
   return {
     id: stringer.id,
@@ -625,6 +699,24 @@ function toPublicStringer(stringer) {
     fromPrice: stringer.fromPrice,
     waitTime: stringer.waitTime,
     trustSignal: stringer.trustSignal,
+    sports: Array.isArray(stringer.sports) ? stringer.sports : [],
+    createdAt: stringer.createdAt,
+    updatedAt: stringer.updatedAt
+  };
+}
+
+function toOwnerStringer(stringer) {
+  return {
+    id: stringer.id,
+    businessName: stringer.businessName,
+    city: stringer.city,
+    ownerName: stringer.ownerName,
+    ownerEmail: stringer.ownerEmail,
+    phone: stringer.phone,
+    fromPrice: stringer.fromPrice,
+    waitTime: stringer.waitTime,
+    trustSignal: stringer.trustSignal,
+    description: stringer.description || '',
     sports: Array.isArray(stringer.sports) ? stringer.sports : [],
     createdAt: stringer.createdAt,
     updatedAt: stringer.updatedAt

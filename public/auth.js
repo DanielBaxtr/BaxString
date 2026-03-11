@@ -253,13 +253,18 @@ function initAddListingPage() {
   if (!gate) return;
 
   const rolePanel = document.getElementById('role-panel');
+  const roleHeading = document.getElementById('role-heading');
+  const roleSubtitle = document.getElementById('role-subtitle');
+  const roleGrid = document.getElementById('role-grid');
+  const editProfileBtn = document.getElementById('edit-profile-btn');
   const roleMessage = document.getElementById('role-selection-message');
   const roleInputs = Array.from(document.querySelectorAll('input[name="accountRole"]'));
+  const profileSummary = document.getElementById('profile-summary');
+  const profileSummaryGrid = document.getElementById('profile-summary-grid');
   const listingCard = document.getElementById('listing-card');
   const listingForm = document.getElementById('listing-form');
   const sessionInfo = document.getElementById('session-info');
   const message = document.getElementById('listing-message');
-  const logoutButton = document.getElementById('logout-btn');
   const gateLoginLink = document.getElementById('gate-login-link');
   const gateRegisterLink = document.getElementById('gate-register-link');
   const ownerNameInput = document.getElementById('owner-name');
@@ -270,6 +275,10 @@ function initAddListingPage() {
   if (gateLoginLink) gateLoginLink.href = `./login.html${nextQuery(nextPath)}`;
   if (gateRegisterLink) gateRegisterLink.href = `./register.html${nextQuery(nextPath)}`;
 
+  let currentUser = null;
+  let currentListing = null;
+  let isEditing = false;
+
   function syncRoleCardStates() {
     roleInputs.forEach((input) => {
       const card = input.closest('.role-card');
@@ -277,6 +286,135 @@ function initAddListingPage() {
         card.classList.toggle('selected', input.checked);
       }
     });
+  }
+
+  async function fetchMyListing() {
+    const { ok, status, data } = await requestJson('/api/my-stringer');
+    if (ok && data?.stringer) return data.stringer;
+    if (status === 404) return null;
+    throw new Error(data?.error || 'Kunne ikke hente oppføringen din.');
+  }
+
+  function setRolePanelText(role, editingMode) {
+    if (!roleHeading || !roleSubtitle) return;
+
+    if (!role) {
+      roleHeading.textContent = 'Velg rolle';
+      roleSubtitle.textContent = 'Før vi spør om pris og ventetid må du velge om du er stringer eller kunde.';
+      return;
+    }
+
+    roleHeading.textContent = 'Din rolle';
+
+    if (editingMode) {
+      roleSubtitle.textContent = 'Du kan endre rolle eller oppdatere oppføringen din under.';
+      return;
+    }
+
+    if (role === 'stringer') {
+      roleSubtitle.textContent = 'Stringer-profilen din er lagret. Trykk "Gjør endringer" for å oppdatere.';
+      return;
+    }
+
+    roleSubtitle.textContent = 'Du er registrert som kunde. Trykk "Gjør endringer" om du vil bytte rolle.';
+  }
+
+  function setFormValuesFromListing(listing) {
+    if (!listingForm || !listing) return;
+
+    if (listingForm.elements.businessName) listingForm.elements.businessName.value = listing.businessName || '';
+    if (listingForm.elements.city) listingForm.elements.city.value = listing.city || '';
+    if (listingForm.elements.phone) listingForm.elements.phone.value = listing.phone || '';
+    if (listingForm.elements.fromPrice) listingForm.elements.fromPrice.value = String(listing.fromPrice || '');
+    if (listingForm.elements.waitTime) listingForm.elements.waitTime.value = listing.waitTime || '';
+    if (listingForm.elements.trustSignal) listingForm.elements.trustSignal.value = listing.trustSignal || '';
+    if (listingForm.elements.description) listingForm.elements.description.value = listing.description || '';
+
+    const selectedSports = Array.isArray(listing.sports) ? listing.sports : [];
+    const sportInputs = Array.from(listingForm.querySelectorAll('input[name="sports"]'));
+    sportInputs.forEach((input) => {
+      input.checked = selectedSports.includes(input.value);
+    });
+  }
+
+  function renderSummaryItem(label, value) {
+    if (!profileSummaryGrid) return;
+    const item = document.createElement('article');
+    item.className = 'summary-item';
+
+    const itemLabel = document.createElement('p');
+    itemLabel.className = 'summary-label';
+    itemLabel.textContent = label;
+
+    const itemValue = document.createElement('p');
+    itemValue.className = 'summary-value';
+    itemValue.textContent = value;
+
+    item.append(itemLabel, itemValue);
+    profileSummaryGrid.appendChild(item);
+  }
+
+  function renderListingSummary(listing) {
+    if (!profileSummaryGrid) return;
+    profileSummaryGrid.innerHTML = '';
+
+    if (!listing) return;
+
+    const sportsText = Array.isArray(listing.sports) && listing.sports.length > 0 ? listing.sports.join(', ') : 'Ikke valgt';
+
+    renderSummaryItem('Profilnavn', listing.businessName || '-');
+    renderSummaryItem('By', listing.city || '-');
+    renderSummaryItem('Fra-pris', Number.isFinite(Number(listing.fromPrice)) ? `${Number(listing.fromPrice)} kr` : '-');
+    renderSummaryItem('Ventetid', listing.waitTime || '-');
+    renderSummaryItem('Sporter', sportsText);
+    renderSummaryItem('Tillitssignal', listing.trustSignal || '-');
+    renderSummaryItem('Telefon', listing.phone || '-');
+    renderSummaryItem('Beskrivelse', listing.description || 'Ingen beskrivelse');
+  }
+
+  function setViewMode(role) {
+    isEditing = false;
+    if (roleGrid) roleGrid.hidden = true;
+    if (listingCard) listingCard.hidden = true;
+    if (editProfileBtn) {
+      editProfileBtn.hidden = !role;
+      editProfileBtn.textContent = 'Gjør endringer';
+    }
+
+    setRolePanelText(role, false);
+    applyRole(currentUser?.email, role, false);
+
+    if (role === 'stringer' && currentListing) {
+      if (profileSummary) profileSummary.hidden = false;
+      renderListingSummary(currentListing);
+      showStatus(roleMessage, 'Rolle: Stringer', 'success');
+      return;
+    }
+
+    if (profileSummary) profileSummary.hidden = true;
+
+    if (role === 'customer') {
+      showStatus(roleMessage, 'Rolle: Kunde', 'success');
+      return;
+    }
+
+    showStatus(roleMessage, 'Velg rolle for å fortsette.', '');
+  }
+
+  function setEditMode(role) {
+    isEditing = true;
+    if (roleGrid) roleGrid.hidden = false;
+    if (profileSummary) profileSummary.hidden = true;
+    if (editProfileBtn) {
+      editProfileBtn.hidden = false;
+      editProfileBtn.textContent = 'Avbryt';
+    }
+
+    setRolePanelText(role, true);
+    applyRole(currentUser?.email, role, false);
+    if (role === 'stringer' && currentListing) {
+      setFormValuesFromListing(currentListing);
+    }
   }
 
   function applyRole(currentUserEmail, role, persist = true) {
@@ -300,19 +438,23 @@ function initAddListingPage() {
 
     if (nextRole === 'customer') {
       if (listingCard) listingCard.hidden = true;
-      showStatus(roleMessage, 'Kunde valgt. Du trenger ikke oppgi pris eller ventetid.', 'success');
+      showStatus(roleMessage, isEditing ? 'Kunde valgt. Du trenger ikke oppgi pris eller ventetid.' : 'Rolle: Kunde', 'success');
       showStatus(message, '', '');
       return;
     }
 
-    if (listingCard) listingCard.hidden = false;
-    showStatus(roleMessage, 'Stringer valgt. Fyll inn pris, ventetid og detaljer under.', 'success');
+    if (listingCard) listingCard.hidden = !isEditing;
+    showStatus(
+      roleMessage,
+      isEditing ? 'Stringer valgt. Fyll inn pris, ventetid og detaljer under.' : 'Rolle: Stringer',
+      'success'
+    );
   }
 
   async function initForAuthenticatedUser(user) {
+    currentUser = user;
     gate.hidden = true;
     if (rolePanel) rolePanel.hidden = false;
-    if (logoutButton) logoutButton.hidden = false;
     if (sessionInfo) {
       sessionInfo.textContent = `Innlogget som ${user.email}.`;
     }
@@ -326,21 +468,65 @@ function initAddListingPage() {
       ownerEmailInput.readOnly = true;
     }
 
-    if (logoutButton) {
-      logoutButton.addEventListener('click', async () => {
-        await requestJson('/api/logout', { method: 'POST' });
-        goTo('./login.html?next=./add-listing.html');
-      });
+    let savedRole = getUserRole(user.email);
+
+    try {
+      currentListing = await fetchMyListing();
+    } catch (error) {
+      currentListing = null;
+      showStatus(roleMessage, error.message || 'Kunne ikke hente oppføringen din.', 'error');
     }
 
-    const savedRole = getUserRole(user.email);
-    applyRole(user.email, savedRole, false);
+    if (!savedRole && currentListing) {
+      savedRole = 'stringer';
+      setUserRole(user.email, savedRole);
+    }
 
     roleInputs.forEach((input) => {
       input.addEventListener('change', () => {
-        applyRole(user.email, input.value, true);
+        const nextRole = sanitizeRole(input.value);
+        applyRole(user.email, nextRole, true);
+
+        if (!nextRole) {
+          setRolePanelText('', true);
+          return;
+        }
+
+        if (nextRole === 'stringer' && currentListing) {
+          setFormValuesFromListing(currentListing);
+        }
+
+        setRolePanelText(nextRole, true);
       });
     });
+
+    if (editProfileBtn) {
+      editProfileBtn.addEventListener('click', () => {
+        const currentRole = getUserRole(user.email);
+        if (isEditing) {
+          setViewMode(currentRole);
+          return;
+        }
+        setEditMode(currentRole);
+      });
+    }
+
+    if (!savedRole) {
+      isEditing = true;
+      if (editProfileBtn) editProfileBtn.hidden = true;
+      if (roleGrid) roleGrid.hidden = false;
+      setRolePanelText('', true);
+      applyRole(user.email, '', false);
+    } else if (savedRole === 'stringer' && !currentListing) {
+      setEditMode(savedRole);
+      if (editProfileBtn) editProfileBtn.hidden = true;
+      showStatus(roleMessage, 'Rolle: Stringer. Fyll inn oppføringsdetaljer under.', 'success');
+    } else {
+      if (savedRole === 'stringer' && currentListing) {
+        setFormValuesFromListing(currentListing);
+      }
+      setViewMode(savedRole);
+    }
 
     if (!listingForm) return;
 
@@ -403,15 +589,19 @@ function initAddListingPage() {
           return;
         }
 
-        showStatus(
-          message,
-          `Oppføring lagret for ${listing.city} (${listing.sports.join(', ')}). Den vises nå i Finn stringer.`,
-          'success'
-        );
+        try {
+          currentListing = await fetchMyListing();
+        } catch {
+          currentListing = {
+            ...listing,
+            ownerName: user.name,
+            ownerEmail: user.email
+          };
+        }
 
-        listingForm.reset();
-        if (ownerNameInput) ownerNameInput.value = user.name || '';
-        if (ownerEmailInput) ownerEmailInput.value = user.email || '';
+        showStatus(message, 'Oppføring lagret. Den vises nå i Finn stringer.', 'success');
+        setUserRole(user.email, 'stringer');
+        setViewMode('stringer');
       } catch {
         showStatus(message, 'Kunne ikke kontakte server.', 'error');
       } finally {
@@ -428,7 +618,7 @@ function initAddListingPage() {
       gate.hidden = false;
       if (rolePanel) rolePanel.hidden = true;
       if (listingCard) listingCard.hidden = true;
-      if (logoutButton) logoutButton.hidden = true;
+      if (profileSummary) profileSummary.hidden = true;
       if (sessionInfo) sessionInfo.textContent = 'Ingen aktiv bruker.';
       return;
     }
