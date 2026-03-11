@@ -127,6 +127,10 @@ body {
   box-shadow: 0 16px 30px rgba(42, 101, 178, 0.12);
 }
 
+.profile-block {
+  margin-top: 1rem;
+}
+
 h1,
 h2,
 h3 {
@@ -332,25 +336,31 @@ textarea:focus {
 }
 
 .summary-grid {
-  margin-top: 0.75rem;
+  margin-top: 0.2rem;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.summary-item {
+  grid-template-columns: 1fr;
+  gap: 0;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: #f9fcff;
+  overflow: hidden;
+}
+
+.summary-item {
+  border-bottom: 1px solid var(--line);
+  background: transparent;
   padding: 0.62rem 0.7rem;
+}
+
+.summary-item:last-child {
+  border-bottom: 0;
 }
 
 .summary-label {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .summary-value {
@@ -398,6 +408,10 @@ fieldset.sport-options {
 #profile-actions {
   display: flex;
   justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
 }
 
 #profile-logout-btn {
