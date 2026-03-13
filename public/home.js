@@ -3,13 +3,14 @@ const sportInput = document.getElementById('sport-input');
 const locationInput = document.getElementById('location-input');
 const categoryCards = Array.from(document.querySelectorAll('.category-card'));
 const cityOptions = document.getElementById('city-options');
+const addListingCta = document.querySelector('.cta-section .cta-primary');
 const LISTINGS_KEY = 'rmr_listings_v1';
 
 if (!searchForm || !sportInput || !locationInput) {
   // Homepage controls not available.
 } else {
   const DEFAULT_CITIES = ['Oslo', 'Bergen', 'Trondheim', 'Stavanger'];
-  const KNOWN_SPORTS = ['tennis', 'squash', 'badminton', 'padel'];
+  const KNOWN_SPORTS = ['tennis', 'squash', 'badminton'];
 
   function normalize(value) {
     return String(value || '')
@@ -94,6 +95,21 @@ if (!searchForm || !sportInput || !locationInput) {
     });
   }
 
+  async function routeAddListing(event) {
+    event.preventDefault();
+    try {
+      const response = await fetch('/api/me', { credentials: 'same-origin' });
+      if (response.ok) {
+        window.location.href = './add-listing.html';
+        return;
+      }
+    } catch {
+      // Fallback below.
+    }
+
+    window.location.href = './login.html?next=./add-listing.html';
+  }
+
   function syncCategoryFromInput() {
     const selectedSport = canonicalSport(sportInput.value);
     setActiveCategory(selectedSport);
@@ -109,6 +125,9 @@ if (!searchForm || !sportInput || !locationInput) {
 
   sportInput.addEventListener('input', syncCategoryFromInput);
   sportInput.addEventListener('change', syncCategoryFromInput);
+  if (addListingCta) {
+    addListingCta.addEventListener('click', routeAddListing);
+  }
 
   searchForm.addEventListener('submit', (event) => {
     event.preventDefault();
@@ -121,7 +140,7 @@ if (!searchForm || !sportInput || !locationInput) {
     }
 
     const params = new URLSearchParams({ location, sport });
-    window.location.href = `./stringers.html?${params.toString()}`;
+    window.location.href = `./booking.html?${params.toString()}`;
   });
 
   renderCityOptions();

@@ -358,7 +358,7 @@ function initAddListingPage() {
 
     if (!role) return;
 
-    const roleText = role === 'stringer' ? 'Stringer' : 'Kunde';
+    const roleText = role === 'stringer' ? 'Stringr' : 'Kunde';
     renderSummaryItem('Min rolle', roleText);
 
     if (role !== 'stringer') {
