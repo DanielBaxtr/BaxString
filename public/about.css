@@ -1,0 +1,43 @@
+html,
+body {
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.about-page {
+  flex: 1;
+  padding: 1.3rem 0 1.8rem;
+}
+
+.site-footer {
+  margin-top: auto;
+}
+
+.about-panel {
+  background: var(--bg-card);
+  border: 1px solid rgba(47, 114, 201, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 12px 24px rgba(42, 101, 178, 0.1);
+  padding: 1rem;
+}
+
+.about-panel h1 {
+  margin: 0;
+}
+
+.about-panel p {
+  margin: 0.7rem 0 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 860px;
+}
+
+@media (min-width: 760px) {
+  .about-panel {
+    padding: 1.2rem;
+  }
+}

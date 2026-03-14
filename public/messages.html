@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meldinger | Stringr</title>
+    <link rel="stylesheet" href="./styles.css?v=8" />
+    <link rel="stylesheet" href="./messages.css?v=1" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card hero">
+        <h1>Meldinger for booking</h1>
+        <p>Avtal møtepunkt og pris mellom kunde og Stringr.</p>
+      </section>
+
+      <section class="card">
+        <h2>Finn booking</h2>
+        <div class="ref-row">
+          <label>
+            Bookingreferanse
+            <input id="reference-input" type="text" placeholder="f.eks. RS-ABC123" />
+          </label>
+          <button id="load-thread-btn" type="button">Åpne meldingstråd</button>
+        </div>
+        <p id="thread-status" class="message" aria-live="polite"></p>
+      </section>
+
+      <section id="thread-panel" class="card" hidden>
+        <h2>Trådstatus</h2>
+        <div id="booking-summary" class="summary"></div>
+
+        <div id="accepted-box" class="accepted-box" hidden></div>
+
+        <form id="accept-form" class="message-form" novalidate>
+          <h3>Aksepter booking (Stringr)</h3>
+          <div class="grid">
+            <label>
+              Navn
+              <input id="accept-name" name="acceptedBy" type="text" maxlength="120" />
+            </label>
+            <label>
+              Endelig pris (NOK)
+              <input id="accept-price" name="finalPriceNok" type="number" min="1" step="1" />
+            </label>
+          </div>
+          <label>
+            Møtepunkt
+            <input id="accept-meeting" name="meetingPoint" type="text" maxlength="180" placeholder="f.eks. Trondheim Torg" />
+          </label>
+          <button id="accept-btn" type="submit">Aksepter booking</button>
+          <p id="accept-status" class="message" aria-live="polite"></p>
+        </form>
+
+        <div>
+          <h3>Meldinger</h3>
+          <div id="messages-list" class="messages-list"></div>
+        </div>
+
+        <form id="message-form" class="message-form" novalidate>
+          <div class="grid">
+            <label>
+              Ditt navn
+              <input id="sender-name" name="senderName" type="text" required maxlength="120" />
+            </label>
+            <label>
+              Rolle
+              <select id="sender-role" name="senderRole" required>
+                <option value="kunde">Kunde</option>
+                <option value="stringr">Stringr</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="grid">
+            <label>
+              Foreslått pris (NOK) (valgfritt)
+              <input id="proposed-price" name="proposedPriceNok" type="number" min="1" step="1" />
+            </label>
+            <label>
+              Møtepunkt (valgfritt)
+              <input id="meeting-point" name="meetingPoint" type="text" maxlength="180" placeholder="f.eks. Oslo S" />
+            </label>
+          </div>
+
+          <label>
+            Melding
+            <textarea id="message-text" name="message" required maxlength="2000" placeholder="Skriv melding her..."></textarea>
+          </label>
+
+          <button id="send-message-btn" type="submit">Send melding</button>
+          <p id="send-status" class="message" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="./messages.js?v=1"></script>
+  </body>
+</html>

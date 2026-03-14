@@ -33,6 +33,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json');
 const STRINGERS_FILE = path.join(DATA_DIR, 'stringers.json');
 const CONTACT_MESSAGES_FILE = path.join(DATA_DIR, 'contact-messages.json');
+const BOOKING_THREADS_FILE = path.join(DATA_DIR, 'booking-threads.json');
 const AUTH_DB_FILE = path.join(DATA_DIR, 'auth.db');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -187,6 +188,90 @@ app.get('/api/bookings/status', (req, res) => {
 
   return res.status(200).json(booking);
 });
+
+app.get('/api/bookings/:reference/messages', (req, res) => {
+  const reference = String(req.params.reference || '').trim();
+  if (!reference) {
+    return res.status(400).json({ error: 'Missing booking reference.' });
+  }
+
+  const booking = findBooking(reference);
+  if (!booking) {
+    return res.status(404).json({ error: 'Booking not found.' });
+  }
+
+  const thread = getOrCreateBookingThread(reference);
+  return res.status(200).json({
+    reference,
+    booking: {
+      reference: booking.reference,
+      customerName: booking.customerName,
+      status: booking.status
+    },
+    accepted: thread.accepted,
+    acceptedBy: thread.acceptedBy,
+    acceptedAt: thread.acceptedAt,
+    finalPriceNok: thread.finalPriceNok,
+    meetingPoint: thread.meetingPoint,
+    messages: Array.isArray(thread.messages) ? thread.messages : []
+  });
+});
+
+app.post(
+  '/api/bookings/:reference/messages',
+  asyncHandler(async (req, res) => {
+    const reference = String(req.params.reference || '').trim();
+    if (!reference) {
+      return res.status(400).json({ error: 'Missing booking reference.' });
+    }
+
+    const booking = findBooking(reference);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found.' });
+    }
+
+    const normalized = normalizeAndValidateThreadMessage(req.body || {});
+    const message = {
+      id: crypto.randomUUID(),
+      senderName: normalized.senderName,
+      senderRole: normalized.senderRole,
+      message: normalized.message,
+      proposedPriceNok: normalized.proposedPriceNok,
+      meetingPoint: normalized.meetingPoint,
+      createdAt: new Date().toISOString()
+    };
+
+    appendBookingThreadMessage(reference, message);
+    return res.status(201).json({ ok: true, message });
+  })
+);
+
+app.post(
+  '/api/bookings/:reference/accept',
+  asyncHandler(async (req, res) => {
+    const reference = String(req.params.reference || '').trim();
+    if (!reference) {
+      return res.status(400).json({ error: 'Missing booking reference.' });
+    }
+
+    const booking = findBooking(reference);
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found.' });
+    }
+
+    const normalized = normalizeAndValidateAcceptance(req.body || {});
+    const updated = markBookingThreadAccepted(reference, normalized);
+
+    return res.status(200).json({
+      ok: true,
+      accepted: updated.accepted,
+      acceptedBy: updated.acceptedBy,
+      acceptedAt: updated.acceptedAt,
+      finalPriceNok: updated.finalPriceNok,
+      meetingPoint: updated.meetingPoint
+    });
+  })
+);
 
 app.get('/api/stringers', (req, res) => {
   const stringers = readStringers().map(toPublicStringer);
@@ -636,6 +721,10 @@ function ensureDataFiles() {
   if (!fs.existsSync(CONTACT_MESSAGES_FILE)) {
     fs.writeFileSync(CONTACT_MESSAGES_FILE, '[]\n', 'utf8');
   }
+
+  if (!fs.existsSync(BOOKING_THREADS_FILE)) {
+    fs.writeFileSync(BOOKING_THREADS_FILE, '[]\n', 'utf8');
+  }
 }
 
 function readBookings() {
@@ -690,6 +779,120 @@ function appendContactMessage(message) {
   const messages = readContactMessages();
   messages.push(message);
   writeContactMessages(messages);
+}
+
+function readBookingThreads() {
+  try {
+    const raw = fs.readFileSync(BOOKING_THREADS_FILE, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeBookingThreads(threads) {
+  fs.writeFileSync(BOOKING_THREADS_FILE, JSON.stringify(threads, null, 2) + '\n', 'utf8');
+}
+
+function getOrCreateBookingThread(reference) {
+  const threads = readBookingThreads();
+  const index = threads.findIndex((thread) => thread.reference === reference);
+
+  if (index >= 0) {
+    const existing = threads[index];
+    return {
+      reference: existing.reference,
+      messages: Array.isArray(existing.messages) ? existing.messages : [],
+      accepted: Boolean(existing.accepted),
+      acceptedBy: existing.acceptedBy || '',
+      acceptedAt: existing.acceptedAt || '',
+      finalPriceNok: Number.isFinite(Number(existing.finalPriceNok)) ? Number(existing.finalPriceNok) : null,
+      meetingPoint: existing.meetingPoint || '',
+      updatedAt: existing.updatedAt || ''
+    };
+  }
+
+  const created = {
+    reference,
+    messages: [],
+    accepted: false,
+    acceptedBy: '',
+    acceptedAt: '',
+    finalPriceNok: null,
+    meetingPoint: '',
+    updatedAt: new Date().toISOString()
+  };
+  threads.push(created);
+  writeBookingThreads(threads);
+  return created;
+}
+
+function appendBookingThreadMessage(reference, message) {
+  const threads = readBookingThreads();
+  const index = threads.findIndex((thread) => thread.reference === reference);
+
+  if (index < 0) {
+    threads.push({
+      reference,
+      messages: [message],
+      accepted: false,
+      acceptedBy: '',
+      acceptedAt: '',
+      finalPriceNok: null,
+      meetingPoint: '',
+      updatedAt: new Date().toISOString()
+    });
+    writeBookingThreads(threads);
+    return;
+  }
+
+  const existingMessages = Array.isArray(threads[index].messages) ? threads[index].messages : [];
+  threads[index] = {
+    ...threads[index],
+    messages: [...existingMessages, message],
+    updatedAt: new Date().toISOString()
+  };
+  writeBookingThreads(threads);
+}
+
+function markBookingThreadAccepted(reference, acceptance) {
+  const threads = readBookingThreads();
+  const index = threads.findIndex((thread) => thread.reference === reference);
+  const now = new Date().toISOString();
+
+  const baseThread =
+    index >= 0
+      ? threads[index]
+      : {
+          reference,
+          messages: [],
+          accepted: false,
+          acceptedBy: '',
+          acceptedAt: '',
+          finalPriceNok: null,
+          meetingPoint: '',
+          updatedAt: now
+        };
+
+  const updated = {
+    ...baseThread,
+    accepted: true,
+    acceptedBy: acceptance.acceptedBy,
+    acceptedAt: now,
+    finalPriceNok: acceptance.finalPriceNok,
+    meetingPoint: acceptance.meetingPoint,
+    updatedAt: now
+  };
+
+  if (index < 0) {
+    threads.push(updated);
+  } else {
+    threads[index] = updated;
+  }
+
+  writeBookingThreads(threads);
+  return updated;
 }
 
 function findLatestStringerByOwnerId(ownerUserId) {
@@ -909,6 +1112,53 @@ function normalizeAndValidateContactMessage(payload) {
   const message = sanitizeString(payload.message, 5, 2000, 'message');
 
   return { name, email, message };
+}
+
+function normalizeAndValidateThreadMessage(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw badRequest('Ugyldig melding.');
+  }
+
+  const senderName = sanitizeString(payload.senderName, 2, 120, 'senderName');
+  const senderRoleRaw = String(payload.senderRole || '')
+    .trim()
+    .toLowerCase();
+  const allowedRoles = ['kunde', 'stringr'];
+  const senderRole = allowedRoles.includes(senderRoleRaw) ? senderRoleRaw : '';
+  if (!senderRole) {
+    throw badRequest('senderRole must be either kunde or stringr.');
+  }
+
+  const message = sanitizeString(payload.message, 1, 2000, 'message');
+  const meetingPoint = sanitizeOptionalString(payload.meetingPoint, 0, 180);
+  const proposedPriceNok = parseOptionalPositiveNumber(payload.proposedPriceNok, 50000);
+
+  return { senderName, senderRole, message, meetingPoint, proposedPriceNok };
+}
+
+function normalizeAndValidateAcceptance(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw badRequest('Ugyldig akseptering.');
+  }
+
+  const acceptedBy = sanitizeString(payload.acceptedBy, 2, 120, 'acceptedBy');
+  const meetingPoint = sanitizeOptionalString(payload.meetingPoint, 0, 180);
+  const finalPriceNok = parseOptionalPositiveNumber(payload.finalPriceNok, 50000);
+
+  return { acceptedBy, meetingPoint, finalPriceNok };
+}
+
+function parseOptionalPositiveNumber(value, maxValue) {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > maxValue) {
+    throw badRequest(`value must be a positive number up to ${maxValue}.`);
+  }
+
+  return Math.round(parsed);
 }
 
 function normalizeSport(value) {

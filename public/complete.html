@@ -13,6 +13,9 @@
         <p id="status-message">Sjekker bookingstatus ...</p>
         <p class="vipps-note">Betaling: <strong>Vipps til 97908575</strong></p>
         <div id="status-details"></div>
+        <p id="message-link-wrap" hidden>
+          <a id="message-link" class="link-button" href="./messages.html">Åpne meldinger</a>
+        </p>
         <a class="link-button" href="./booking.html">Tilbake til bestilling</a>
       </section>
     </main>
@@ -23,10 +26,17 @@
         const reference = params.get('reference');
         const messageEl = document.getElementById('status-message');
         const detailsEl = document.getElementById('status-details');
+        const messageLinkWrap = document.getElementById('message-link-wrap');
+        const messageLink = document.getElementById('message-link');
 
         if (!reference) {
           messageEl.textContent = 'Mangler bestillingsreferanse i URL.';
           return;
+        }
+
+        if (messageLinkWrap && messageLink) {
+          messageLink.href = `./messages.html?reference=${encodeURIComponent(reference)}`;
+          messageLinkWrap.hidden = false;
         }
 
         try {

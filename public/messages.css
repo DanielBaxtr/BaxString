@@ -1,0 +1,91 @@
+.ref-row {
+  display: grid;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.ref-row button {
+  width: fit-content;
+}
+
+.message-form {
+  margin-top: 1rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+}
+
+.message-form h3 {
+  margin: 0 0 0.6rem;
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.messages-list {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.message-item {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f9fcff;
+  padding: 0.7rem;
+}
+
+.message-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.role-pill {
+  padding: 0.12rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid #cfe1f8;
+  background: #edf5ff;
+  color: #2f72c9;
+  font-weight: 700;
+}
+
+.message-body {
+  margin-top: 0.4rem;
+  color: var(--ink);
+  white-space: pre-wrap;
+}
+
+.meta-line {
+  margin-top: 0.42rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.meta-chip {
+  border: 1px solid #cfe1f8;
+  background: #ffffff;
+  color: #285580;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+}
+
+.accepted-box {
+  margin-top: 0.75rem;
+  border: 1px solid #bde7d9;
+  background: #ecfbf5;
+  color: #1f6f58;
+  border-radius: 12px;
+  padding: 0.62rem 0.72rem;
+  font-weight: 600;
+}
+
+@media (min-width: 760px) {
+  .ref-row {
+    grid-template-columns: 1fr auto;
+  }
+}

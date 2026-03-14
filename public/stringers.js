@@ -3,61 +3,10 @@ const metaEl = document.getElementById('picker-meta');
 const emptyEl = document.getElementById('picker-empty');
 const selectedFiltersEl = document.getElementById('selected-filters');
 const changeSearchLink = document.getElementById('change-search-link');
-const LISTINGS_KEY = 'rmr_listings_v1';
-
 if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
   // Stringer picker UI is not present.
 } else {
-  const DEMO_STRINGERS = [
-    {
-      name: 'Oslo Racket Lab',
-      city: 'Oslo',
-      fromPrice: 175,
-      waitTime: '24 timer',
-      sports: ['Tennis'],
-      trust: 'Erfaren stringer'
-    },
-    {
-      name: 'Bergen String Studio',
-      city: 'Bergen',
-      fromPrice: 190,
-      waitTime: 'Samme dag',
-      sports: ['Tennis', 'Squash'],
-      trust: 'Samme-dag tilgjengelig'
-    },
-    {
-      name: 'Trondheim Court Service',
-      city: 'Trondheim',
-      fromPrice: 180,
-      waitTime: '24-48 timer',
-      sports: ['Tennis', 'Badminton'],
-      trust: 'Verifisert oppføring'
-    },
-    {
-      name: 'Stavanger Pro Strings',
-      city: 'Stavanger',
-      fromPrice: 185,
-      waitTime: '24 timer',
-      sports: ['Tennis', 'Squash'],
-      trust: 'Rask levering'
-    },
-    {
-      name: 'Nordic Badminton Care',
-      city: 'Oslo',
-      fromPrice: 170,
-      waitTime: '24-48 timer',
-      sports: ['Badminton', 'Squash'],
-      trust: 'Turneringsklar strenging'
-    },
-    {
-      name: 'Vestlandet String Hub',
-      city: 'Bergen',
-      fromPrice: 185,
-      waitTime: '48 timer',
-      sports: ['Tennis', 'Badminton'],
-      trust: 'Pålitelig klubbpartner'
-    }
-  ];
+  const DEMO_STRINGERS = [];
 
   const params = new URLSearchParams(window.location.search);
 
@@ -74,15 +23,6 @@ if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
       .filter(Boolean)
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
-  }
-
-  function safeParse(rawValue, fallback) {
-    try {
-      const parsed = JSON.parse(rawValue);
-      return parsed ?? fallback;
-    } catch {
-      return fallback;
-    }
   }
 
   function parsePrice(value) {
@@ -134,9 +74,7 @@ if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
   }
 
   function readLocalCommunityStringers() {
-    const raw = safeParse(localStorage.getItem(LISTINGS_KEY), []);
-    if (!Array.isArray(raw)) return [];
-    return raw.map(toStringerCardData).filter(Boolean);
+    return [];
   }
 
   async function readApiCommunityStringers() {

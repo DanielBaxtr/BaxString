@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kontakt oss | Stringr</title>
+    <title>Om oss | Stringr</title>
     <link rel="stylesheet" href="./homepage.css?v=13" />
-    <link rel="stylesheet" href="./contact.css?v=1" />
+    <link rel="stylesheet" href="./about.css?v=3" />
   </head>
   <body>
     <header class="site-header">
@@ -24,32 +24,15 @@
       </div>
     </header>
 
-    <main class="contact-page">
-      <section class="contact-hero container">
-        <h1>Kontakt oss</h1>
-        <p>Har du spørsmål, klager eller tilbakemeldinger? Send oss en melding.</p>
-      </section>
-
-      <section class="container contact-panel">
-        <form id="contact-form" class="contact-form" novalidate>
-          <label>
-            Navn
-            <input id="contact-name" name="name" type="text" required minlength="2" maxlength="120" />
-          </label>
-
-          <label>
-            E-post
-            <input id="contact-email" name="email" type="email" required maxlength="120" />
-          </label>
-
-          <label>
-            Melding
-            <textarea id="contact-message" name="message" required minlength="5" maxlength="2000"></textarea>
-          </label>
-
-          <button id="contact-submit" type="submit" class="search-btn">Send melding</button>
-          <p id="contact-status" class="contact-status" aria-live="polite"></p>
-        </form>
+    <main class="about-page">
+      <section class="container about-panel">
+        <h1>Om oss</h1>
+        <p>
+          Stringr kobler spillere med lokale stringere innen tennis, badminton og squash. Tanken er enkel:
+          gjøre det lettere å finne noen i nærheten som kan strenge racketen din, uten unødvendig leting og
+          usikkerhet. Samtidig får stringere en plattform der de kan bli oppdaget av flere kunder. Det skaper en
+          bedre og mer oversiktlig markedsplass for begge sider.
+        </p>
       </section>
     </main>
 
@@ -66,11 +49,10 @@
           <a href="./contact.html">Kontakt</a>
         </nav>
 
-        <a id="login" class="footer-login" href="./login.html">Logg inn</a>
+        <a class="footer-login" href="./login.html">Logg inn</a>
       </div>
     </footer>
 
     <script src="./nav-auth.js?v=3"></script>
-    <script src="./contact.js?v=1"></script>
   </body>
 </html>
