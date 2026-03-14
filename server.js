@@ -699,7 +699,7 @@ function toPublicStringer(stringer) {
     fromPrice: stringer.fromPrice,
     waitTime: stringer.waitTime,
     trustSignal: stringer.trustSignal,
-    sports: Array.isArray(stringer.sports) ? stringer.sports : [],
+    sports: normalizeSportsList(stringer.sports),
     createdAt: stringer.createdAt,
     updatedAt: stringer.updatedAt
   };
@@ -717,7 +717,7 @@ function toOwnerStringer(stringer) {
     waitTime: stringer.waitTime,
     trustSignal: stringer.trustSignal,
     description: stringer.description || '',
-    sports: Array.isArray(stringer.sports) ? stringer.sports : [],
+    sports: normalizeSportsList(stringer.sports),
     createdAt: stringer.createdAt,
     updatedAt: stringer.updatedAt
   };
@@ -837,7 +837,7 @@ function normalizeAndValidateStringer(payload, owner) {
     throw badRequest('sports must be a non-empty array.');
   }
 
-  const normalizedSports = [...new Set(payload.sports.map(normalizeSport).filter(Boolean))];
+  const normalizedSports = normalizeSportsList(payload.sports);
   if (normalizedSports.length === 0) {
     throw badRequest('sports contains no valid values.');
   }
@@ -869,8 +869,15 @@ function normalizeSport(value) {
   if (raw.startsWith('tennis')) return 'Tennis';
   if (raw.startsWith('squash')) return 'Squash';
   if (raw.startsWith('badminton')) return 'Badminton';
-  if (raw.startsWith('padel')) return 'Padel';
   return '';
+}
+
+function normalizeSportsList(values) {
+  if (!Array.isArray(values)) {
+    return [];
+  }
+
+  return [...new Set(values.map(normalizeSport).filter(Boolean))];
 }
 
 function toTitleCase(value) {

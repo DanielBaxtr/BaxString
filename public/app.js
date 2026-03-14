@@ -80,10 +80,10 @@ function renderSelectedStringerContext() {
     if (location) fallbackParams.set('location', location);
     if (sport) fallbackParams.set('sport', sport);
     const pickerUrl = `./stringers.html?${fallbackParams.toString()}`;
-    stringerContext.innerHTML = `Du må velge stringer først. <a href="${pickerUrl}">Gå til valg av stringer</a>.`;
-    showMessage('Velg stringer før du sender bestilling.', true);
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Velg stringer først';
+    stringerContext.innerHTML = `Ingen stringer valgt. Du kan sende bestilling direkte, eller <a href="${pickerUrl}">finne stringer</a>.`;
+    showMessage('');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send bestilling';
     return;
   }
 
@@ -123,14 +123,12 @@ form.addEventListener('submit', async (event) => {
   const selectedPrice = String(formData.get('selectedPrice') || '').trim();
   const selectedWait = String(formData.get('selectedWait') || '').trim();
 
-  if (!selectedStringer) {
-    showMessage('Du må velge stringer før du sender bestilling.', true);
-    return;
+  const systemNoteParts = [];
+  if (selectedStringer) {
+    systemNoteParts.push(`Valgt stringer: ${selectedStringer}`);
+    if (selectedPrice) systemNoteParts.push(`fra NOK ${selectedPrice}`);
+    if (selectedWait) systemNoteParts.push(`ventetid ${selectedWait}`);
   }
-
-  const systemNoteParts = [`Valgt stringer: ${selectedStringer}`];
-  if (selectedPrice) systemNoteParts.push(`fra NOK ${selectedPrice}`);
-  if (selectedWait) systemNoteParts.push(`ventetid ${selectedWait}`);
   const userNotes = String(formData.get('notes') || '').trim();
   payload.notes = [systemNoteParts.join(', '), userNotes].filter(Boolean).join('\n');
 

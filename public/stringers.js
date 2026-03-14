@@ -14,7 +14,7 @@ if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
       city: 'Oslo',
       fromPrice: 175,
       waitTime: '24 timer',
-      sports: ['Tennis', 'Padel'],
+      sports: ['Tennis'],
       trust: 'Erfaren stringer'
     },
     {
@@ -30,7 +30,7 @@ if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
       city: 'Trondheim',
       fromPrice: 180,
       waitTime: '24-48 timer',
-      sports: ['Tennis', 'Badminton', 'Padel'],
+      sports: ['Tennis', 'Badminton'],
       trust: 'Verifisert oppføring'
     },
     {
@@ -54,7 +54,7 @@ if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
       city: 'Bergen',
       fromPrice: 185,
       waitTime: '48 timer',
-      sports: ['Tennis', 'Padel', 'Badminton'],
+      sports: ['Tennis', 'Badminton'],
       trust: 'Pålitelig klubbpartner'
     }
   ];
@@ -100,7 +100,7 @@ if (!gridEl || !metaEl || !emptyEl || !selectedFiltersEl || !changeSearchLink) {
   function canonicalSport(value) {
     const raw = normalize(value);
     if (!raw) return '';
-    const knownSports = ['tennis', 'squash', 'badminton', 'padel'];
+    const knownSports = ['tennis', 'squash', 'badminton'];
     const hit = knownSports.find((sport) => sport.startsWith(raw));
     return hit ? hit.charAt(0).toUpperCase() + hit.slice(1) : '';
   }
