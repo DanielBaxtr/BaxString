@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="no">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kontakt oss | Stringr</title>
+    <link rel="stylesheet" href="./homepage.css?v=13" />
+    <link rel="stylesheet" href="./contact.css?v=1" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-row">
+        <a href="./index.html#hjem" class="logo">Stringr</a>
+
+        <nav class="main-nav" aria-label="Hovedmeny">
+          <a href="./index.html#om-oss">Om oss</a>
+          <a href="./stringers.html">Finn stringer</a>
+          <a href="./contact.html">Kontakt</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a href="./login.html" class="login-link">Logg inn</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="contact-page">
+      <section class="contact-hero container">
+        <h1>Kontakt oss</h1>
+        <p>Har du spørsmål om booking eller strenging? Send oss en melding.</p>
+      </section>
+
+      <section class="container contact-panel">
+        <form id="contact-form" class="contact-form" novalidate>
+          <label>
+            Navn
+            <input id="contact-name" name="name" type="text" required minlength="2" maxlength="120" />
+          </label>
+
+          <label>
+            E-post
+            <input id="contact-email" name="email" type="email" required maxlength="120" />
+          </label>
+
+          <label>
+            Melding
+            <textarea id="contact-message" name="message" required minlength="5" maxlength="2000"></textarea>
+          </label>
+
+          <button id="contact-submit" type="submit" class="search-btn">Send melding</button>
+          <p id="contact-status" class="contact-status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <p class="footer-brand">Stringr</p>
+          <p class="footer-copy">© 2026 Stringr. Alle rettigheter forbeholdt.</p>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer lenker">
+          <a href="./index.html#om-oss">Om oss</a>
+          <a href="./stringers.html">Finn stringer</a>
+          <a href="./contact.html">Kontakt</a>
+        </nav>
+
+        <a id="login" class="footer-login" href="./login.html">Logg inn</a>
+      </div>
+    </footer>
+
+    <script src="./nav-auth.js?v=3"></script>
+    <script src="./contact.js?v=1"></script>
+  </body>
+</html>

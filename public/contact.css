@@ -1,0 +1,59 @@
+.contact-page {
+  padding: 1.3rem 0 1.8rem;
+}
+
+.contact-hero h1 {
+  margin: 0;
+}
+
+.contact-hero p {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+}
+
+.contact-panel {
+  margin-top: 1rem;
+}
+
+.contact-form {
+  background: var(--bg-card);
+  border: 1px solid rgba(47, 114, 201, 0.14);
+  border-radius: 18px;
+  box-shadow: 0 12px 24px rgba(42, 101, 178, 0.1);
+  padding: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.contact-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.contact-form textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+
+.contact-status {
+  margin: 0;
+  min-height: 1.1rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.contact-status.error {
+  color: #b53045;
+}
+
+.contact-status.success {
+  color: #2f9f7e;
+}
+
+@media (min-width: 760px) {
+  .contact-form {
+    padding: 1.2rem;
+  }
+}

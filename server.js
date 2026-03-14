@@ -32,6 +32,7 @@ const EPAYMENT_BASE_URL =
 const DATA_DIR = path.join(__dirname, 'data');
 const BOOKINGS_FILE = path.join(DATA_DIR, 'bookings.json');
 const STRINGERS_FILE = path.join(DATA_DIR, 'stringers.json');
+const CONTACT_MESSAGES_FILE = path.join(DATA_DIR, 'contact-messages.json');
 const AUTH_DB_FILE = path.join(DATA_DIR, 'auth.db');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
@@ -248,6 +249,23 @@ app.post(
 
     appendStringer(stringer);
     return res.status(201).json(toPublicStringer(stringer));
+  })
+);
+
+app.post(
+  '/api/contact',
+  asyncHandler(async (req, res) => {
+    const normalized = normalizeAndValidateContactMessage(req.body || {});
+    const message = {
+      id: crypto.randomUUID(),
+      name: normalized.name,
+      email: normalized.email,
+      message: normalized.message,
+      createdAt: new Date().toISOString()
+    };
+
+    appendContactMessage(message);
+    return res.status(201).json({ ok: true });
   })
 );
 
@@ -614,6 +632,10 @@ function ensureDataFiles() {
   if (!fs.existsSync(STRINGERS_FILE)) {
     fs.writeFileSync(STRINGERS_FILE, '[]\n', 'utf8');
   }
+
+  if (!fs.existsSync(CONTACT_MESSAGES_FILE)) {
+    fs.writeFileSync(CONTACT_MESSAGES_FILE, '[]\n', 'utf8');
+  }
 }
 
 function readBookings() {
@@ -648,6 +670,26 @@ function appendStringer(stringer) {
   const stringers = readStringers();
   stringers.push(stringer);
   writeStringers(stringers);
+}
+
+function readContactMessages() {
+  try {
+    const raw = fs.readFileSync(CONTACT_MESSAGES_FILE, 'utf8');
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeContactMessages(messages) {
+  fs.writeFileSync(CONTACT_MESSAGES_FILE, JSON.stringify(messages, null, 2) + '\n', 'utf8');
+}
+
+function appendContactMessage(message) {
+  const messages = readContactMessages();
+  messages.push(message);
+  writeContactMessages(messages);
 }
 
 function findLatestStringerByOwnerId(ownerUserId) {
@@ -855,6 +897,18 @@ function normalizeAndValidateStringer(payload, owner) {
     description,
     sports: normalizedSports
   };
+}
+
+function normalizeAndValidateContactMessage(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw badRequest('Ugyldig kontaktmelding.');
+  }
+
+  const name = sanitizeString(payload.name, 2, 120, 'name');
+  const email = sanitizeEmail(payload.email);
+  const message = sanitizeString(payload.message, 5, 2000, 'message');
+
+  return { name, email, message };
 }
 
 function normalizeSport(value) {
